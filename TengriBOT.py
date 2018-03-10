@@ -230,4 +230,4 @@ async def lg(context, *args):
         await bot.say("Le serveur ne gère pas le mot-clé '%s' ! Faites $lg help pour plus d'informations." % key_word)
 
 
-bot.run('MjE3OTk4NjM2NDM1Mzc0MDgw.DUIQxg.lCBRYbM5zKSYvCEe5EkDCaRWZVY')
+bot.run('token')
