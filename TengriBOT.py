@@ -7,7 +7,7 @@ bot = commands.Bot(command_prefix='$', description='Hello !')
 @bot.event
 async def on_ready():
     print('Logged in as %s' % bot.user.name)
-    #TODO : Say when the bot is connected in the chan
+    # TODO : Say when the bot is connected in the chan
 
 
 
@@ -229,5 +229,7 @@ async def lg(context, *args):
     else:
         await bot.say("Le serveur ne gère pas le mot-clé '%s' ! Faites $lg help pour plus d'informations." % key_word)
 
+with open('token.txt', 'r') as config:
+    token = config.readlines()[0].split(' ')[0]
 
-bot.run('token')
+bot.run(token)
