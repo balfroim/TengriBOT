@@ -2,6 +2,7 @@ import discord
 import os
 from discord.ext import commands
 
+# Init the bot
 bot = commands.Bot(command_prefix='$', description='Hello !')
 
 @bot.event
