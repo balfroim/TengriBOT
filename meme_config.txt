@@ -14,7 +14,7 @@ gingersoul; ;URL_NOT_FOUND
 theanswer; ;URL_NOT_FOUND
 licorne; ;URL_NOT_FOUND
 godwin; ;URL_NOT_FOUND
-académie; ;URL_NOT_FOUND
+academie; ;URL_NOT_FOUND
 califyes; ;URL_NOT_FOUND
 rickroll; ;URL_NOT_FOUND
 broll; ;URL_NOT_FOUND
