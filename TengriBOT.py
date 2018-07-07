@@ -1,15 +1,13 @@
 import discord
-import os
 from discord.ext import commands
 
 # Init the bot
 bot = commands.Bot(command_prefix='$', description='Hello !')
 
+
 @bot.event
 async def on_ready():
     print('Logged in as %s' % bot.user.name)
-    # TODO : Say when the bot is connected in the chan
-
 
 
 @bot.command(pass_context=True)
@@ -25,13 +23,13 @@ async def ideol(context, *args):
         nb_ideol = len(ideol_list)
 
         if nb_ideol > 1:
-            message = 'Il y %d idéolinguistes sur ce serveur : ' % nb_ideol
+            message = f'Il y a {nb_ideol} idéolinguiste(s) sur ce serveur : '
             for ideolinguist in ideol_list[:-2]:
-                message += '%s, ' % ideolinguist
-            message += '%s et %s.' % (ideol_list[-2], ideol_list[-1])
+                message += f'{ideolinguist}, '
+            message += f'{ideol_list[-2]} et {ideol_list[-1]}.'
             await bot.say(message)
         elif nb_ideol == 1:
-            await bot.say('Le seul idéolinguiste du serveur est %s.' % ideol_list[0])
+            await bot.say(f'Le seul idéolinguiste du serveur est {ideol_list[0]}.')
         else:
             await bot.say('Il n\'y as pas d\'idéolinguiste')
     else:
@@ -51,13 +49,13 @@ async def meme(*args):
         if meme_name in meme_config:
             await bot.say(meme_config[meme_name]['url'])
         else:
-            await bot.say("Le même (%s) est inconnu." % meme_name)
+            await bot.say(f'Le même ({meme_name}) est inconnu.')
     else:
-        #Liste des mêmes
+        # Liste des mêmes
         message = '```Markdown\n'
         meme_names = sorted(meme_config.keys())
         for name in meme_names:
-            message += '* %s: %s\n' % (name, meme_config[name]['desc'])
+            message += f'* {name}: {meme_config[name]["desc"]}\n'
         message += '```'
         await bot.say(message)
 
@@ -121,53 +119,54 @@ async def lg(context, *args):
     know_role_name = "Connaît %s" % language
     learn_role_name = "Apprend %s" % language
     if not (key_word in ('help', 'list', 'add')):
+        # Check if the language is in the server
         if language in lgs_list:
             know_role = discord.utils.get(server.roles, name=know_role_name)
             learn_role = discord.utils.get(server.roles, name=learn_role_name)
         else:
-            await bot.say("Le serveur ne gère pas encore %s, désolé !" % lg_and_det)
+            await bot.say(f'Le serveur ne gère pas encore {lg_and_det}, désolé !')
             return
     # CONNAIT
     if key_word == 'know':
         if know_role in author.roles:
-            await bot.say("Tu connaîs déjà %s !" % lg_and_det)
+            await bot.say(f'Tu connaîs déjà {lg_and_det} !')
         else:
             if learn_role in author.roles:
-                await bot.say("Bravo, tu as finis d'apprendre %s !" % lg_and_det)
+                await bot.say(f'Bravo, tu as finis d\'apprendre {lg_and_det} !')
                 await bot.remove_roles(author, learn_role)
             else:
-                await bot.say("Tu connaîs maintenant %s !" % lg_and_det)
+                await bot.say(f'Tu connaîs maintenant {lg_and_det} !')
             await bot.add_roles(author, know_role)
     # APPREND
     elif key_word == 'learn':
         if learn_role in author.roles:
-            await bot.say("Tu apprends déjà %s !" % lg_and_det)
+            await bot.say(f'Tu apprends déjà {lg_and_det} !')
         else:
             if know_role in author.roles:
-                await bot.say("Tu ne connais plus %s, tu l'apprends !" % lg_and_det)
+                await bot.say(f'Tu ne connais plus {lg_and_det}, tu l\'apprends !')
                 await bot.remove_roles(author, know_role)
             else:
-                await bot.say("Tu apprends maintenant %s !" % lg_and_det)
+                await bot.say(f'Tu apprends maintenant {lg_and_det} !')
             await bot.add_roles(author, learn_role)
     # OUBLIE
     elif key_word == 'forget':
         if know_role in author.roles:
             await bot.remove_roles(author, know_role)
-            await bot.say("Tu ne connais plus %s." % lg_and_det)
+            await bot.say(f'Tu ne connais plus {lg_and_det}.')
         elif learn_role in author.roles:
             await bot.remove_roles(author, learn_role)
-            await bot.say("Tu n'apprend plus %s." % lg_and_det)
+            await bot.say(f'Tu n\'apprend plus {lg_and_det}.')
         else:
-            await bot.say("Tu ne connaissais ni apprenais %s déjà." % lg_and_det)
+            await bot.say(f'Tu ne connaissais ni apprenais {lg_and_det} déjà.')
     # AJOUT
     elif key_word == "add":
         if discord.utils.get(server.roles, name='Modération') in author.roles:
             if not (language in lgs_list):
                 await bot.create_role(server, name=know_role_name)
                 await bot.create_role(server, name=learn_role_name)
-                await bot.say('Le serveur gère maintenant %s !' % lg_and_det)
+                await bot.say(f'Le serveur gère maintenant {lg_and_det} !')
             else:
-                await bot.say('Le serveur gérais déjà %s !' % lg_and_det)
+                await bot.say(f'Le serveur gérais déjà {lg_and_det} !')
         else:
             await bot.say('Seul les modérateurs peuvent utiliser cet commande')
     # RETIRER
@@ -175,43 +174,43 @@ async def lg(context, *args):
         if discord.utils.get(server.roles, name='Modération') in author.roles:
             await bot.delete_role(server, know_role)
             await bot.delete_role(server, learn_role)
-            await bot.say('Le serveur ne gère plus %s !' % lg_and_det)
+            await bot.say(f'Le serveur ne gère plus {lg_and_det} !')
         else:
             await bot.say('Seul les modérateurs peuvent utiliser cet commande')
     # WHOKNOW
     elif key_word == "whoknow":
         whoknow_list = sorted([user.name for user in server.members if (know_role in user.roles)])
         if len(whoknow_list) > 1:
-            message = '%d personnes connaissent %s: ' % (len(whoknow_list), lg_and_det)
+            message = f'{len(whoknow_list)} personnes connaissent {lg_and_det}: '
             for member in whoknow_list[:-2]:
                 message += member + ", "
-            message += "%s et %s." % (whoknow_list[-2], whoknow_list[-1])
+            message += f"{whoknow_list[-2]} et {whoknow_list[-1]}."
         elif len(whoknow_list) == 1:
-            message = 'Seul %s connaît %s.' % (whoknow_list[0], lg_and_det)
+            message = f'Seul {whoknow_list[0]} connaît {lg_and_det}.'
         else:
-            message = 'Personne ne connaît %s.' % lg_and_det
+            message = f'Personne ne connaît {lg_and_det}.'
 
         await bot.say(message)
     # WHOLEARN
     elif key_word == "wholearn":
         wholearn_list = sorted([user.name for user in server.members if (learn_role in user.roles)])
         if len(wholearn_list) > 1:
-            message = '%d personnes apprend %s: ' % (len(wholearn_list), lg_and_det)
+            message = f'{len(wholearn_list)} personnes apprend {lg_and_det}: '
             for member in wholearn_list[:-2]:
                 message += member + ", "
-            message += "%s et %s." % (wholearn_list[-2], wholearn_list[-1])
+            message += f'{wholearn_list[-2]} et {wholearn_list[-1]}.'
         elif len(wholearn_list) == 1:
-            message = 'Seul %s apprend %s.' % (wholearn_list[0], lg_and_det)
+            message = f'Seul {wholearn_list[0]} apprend %s.'
         else:
-            message = 'Personne n\'apprends %s.' % lg_and_det
+            message = f'Personne n\'apprends {lg_and_det}.'
 
         await bot.say(message)
     # LIST
     elif key_word == "list":
-        message = 'Le serveur gère les %d langues suivantes : ' % len(lgs_list)
+        message = f'Le serveur gère les {len(lgs_list)} langue(s) suivantes : '
         for language in lgs_list[:-2]:
-            message += language + ", "
-        message += "%s et %s." % (lgs_list[-2], lgs_list[-1])
+            message += language + ', '
+        message += f'{lgs_list[-2]} et {lgs_list[-1]}.'
 
         await bot.say(message)
     # HELP
@@ -228,7 +227,7 @@ async def lg(context, *args):
         help_message += '```'
         await bot.say(help_message)
     else:
-        await bot.say("Le serveur ne gère pas le mot-clé '%s' ! Faites $lg help pour plus d'informations." % key_word)
+        await bot.say(f'Le serveur ne gère pas le mot-clé \'{key_word}\' ! Faites $lg help pour plus d\'informations.')
 
 with open('token.txt', 'r') as config:
     token = config.readlines()[0].split(' ')[0]
