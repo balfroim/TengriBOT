@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 # Init the bot
-bot = commands.Bot(command_prefix='$', description='Hello !')
+bot = commands.Bot(command_prefix='$', description='Bot pour le Discord Linguisticae?.')
 
 
 @bot.event
@@ -11,33 +11,62 @@ async def on_ready():
 
 
 @bot.command(pass_context=True)
-async def ideol(context, *args):
+async def ideolist(context):
+    """Donne la liste des idéolinguistes"""
+    # The server in which the command was executed
+    server = context.message.server
+    # The role of ideolinguist
+    ideol_role = discord.utils.get(server.roles, name='Idéolinguiste')
+
+    # The list of ideolinguists
+    ideol_list = sorted([user.name for user in server.members if (ideol_role in user.roles)])
+    # The number of ideolinguists
+    nb_ideol = len(ideol_list)
+
+    if nb_ideol > 1:
+        message = f'Il y a {nb_ideol} idéolinguiste(s) sur ce serveur : '
+        for ideolinguist in ideol_list[:-2]:
+            message += f'{ideolinguist}, '
+        message += f'{ideol_list[-2]} et {ideol_list[-1]}.'
+        await bot.say(message)
+    elif nb_ideol == 1:
+        await bot.say(f'Le seul idéolinguiste du serveur est {ideol_list[0]}.')
+    else:
+        await bot.say('Il n\'y as pas d\'idéolinguiste')
+
+
+@bot.command(pass_context=True)
+async def ideol(context):
+    """Ajoute le badge ideolinguiste"""
     # The server in which the command was executed
     server = context.message.server
     # The user who executed the command
     author = context.message.author
+    # The role of ideolinguist
     ideol_role = discord.utils.get(server.roles, name='Idéolinguiste')
 
-    if len(args) != 0 and args[0].lower() == 'list':
-        ideol_list = sorted([user.name for user in server.members if (ideol_role in user.roles)])
-        nb_ideol = len(ideol_list)
-
-        if nb_ideol > 1:
-            message = f'Il y a {nb_ideol} idéolinguiste(s) sur ce serveur : '
-            for ideolinguist in ideol_list[:-2]:
-                message += f'{ideolinguist}, '
-            message += f'{ideol_list[-2]} et {ideol_list[-1]}.'
-            await bot.say(message)
-        elif nb_ideol == 1:
-            await bot.say(f'Le seul idéolinguiste du serveur est {ideol_list[0]}.')
-        else:
-            await bot.say('Il n\'y as pas d\'idéolinguiste')
+    if not (ideol_role in author.roles):
+        await bot.add_roles(author, ideol_role)
+        await bot.say('Tu es maintenant idéolinguiste !')
     else:
-        if not (ideol_role in author.roles):
-            await bot.add_roles(author, ideol_role)
-            await bot.say('Tu es maintenant idéolinguiste !')
-        else:
-            await bot.say('Tu étais déjà idéolinguiste !')
+        await bot.say('Tu étais déjà idéolinguiste !')
+
+
+@bot.command(pass_context=True)
+async def rmvideol(context):
+    """Retire le badge ideolinguiste"""
+    # The server in which the command was executed
+    server = context.message.server
+    # The user who executed the command
+    author = context.message.author
+    # The role of ideolinguist
+    ideol_role = discord.utils.get(server.roles, name='Idéolinguiste')
+
+    if ideol_role in author.roles:
+        await bot.remove_roles(author, ideol_role)
+        await bot.say('Tu n\'es plus idéolinguiste !')
+    else:
+        await bot.say('Tu n\'étais pas idéolinguiste !')
 
 
 @bot.command()
@@ -59,6 +88,7 @@ async def meme(*args):
         message += '```'
         await bot.say(message)
 
+
 async def load_memeconfig():
     """Load the meme config
     Return
@@ -76,33 +106,19 @@ async def load_memeconfig():
 
     return config
 
-@bot.command()
-async def ping():
-    await bot.say("Pong")
-
-"""
-@bot.event
-async def on_message(msg):
-    if msg.content.lower() == 'qqn pe me metr ideolingwist svp ?':
-        await bot.say('C\'est fait')
-        ideol_role = discord.utils.get(msg.server, name='Idéolinguiste')
-        await bot.add_roles(msg.author, ideol_role)
-"""
+# The help message
+help_message = 'Commandes de languages :\n'
+help_message += '-' * 22 + '\n'
+help_message += '$lg know <language>: Ajoute le badge "Connaît"\n'
+help_message += '$lg learn <language>: Ajoute le badge "Apprend"\n'
+help_message += '$lg forget <language>: Oublie <language>\n'
+help_message += '$lg add <language>: Ajoute <language> au serveur (MODERATOR ONLY)\n'
+help_message += '$lg rmv <language>: Retire <language> du serveur (MODERATOR ONLY)\n'
+help_message += '$lg list : Liste des langues gérer par le serveur'
 
 
-@bot.command(pass_context=True)
+@bot.command(pass_context=True, description=help_message)
 async def lg(context, *args):
-    """Commande relative au language
-        Syntaxe: $lg <key_word> <language>
-        Key words :
-            know = Ajoute le badge "Connait"
-            learn = Ajoute le badge "Apprends"
-            forget = Retire les badges en lien avec la langue
-            add = Ajoute la langue au serveur (MODERATOR ONLY)
-            rmv = Retire la langue du serveur (MODERATOR ONLY)
-            list =  La liste de langues
-            help = Menu d'aide
-        """
     # The server in which the command was executed
     server = context.message.server
     # The user who executed the command
@@ -118,6 +134,8 @@ async def lg(context, *args):
 
     know_role_name = "Connaît %s" % language
     learn_role_name = "Apprend %s" % language
+    know_role, learn_role = None, None
+
     if not (key_word in ('help', 'list', 'add')):
         # Check if the language is in the server
         if language in lgs_list:
@@ -126,6 +144,7 @@ async def lg(context, *args):
         else:
             await bot.say(f'Le serveur ne gère pas encore {lg_and_det}, désolé !')
             return
+
     # CONNAIT
     if key_word == 'know':
         if know_role in author.roles:
@@ -162,8 +181,8 @@ async def lg(context, *args):
     elif key_word == "add":
         if discord.utils.get(server.roles, name='Modération') in author.roles:
             if not (language in lgs_list):
-                await bot.create_role(server, name=know_role_name)
-                await bot.create_role(server, name=learn_role_name)
+                bot.create_role(server, name=know_role_name)
+                bot.create_role(server, name=learn_role_name)
                 await bot.say(f'Le serveur gère maintenant {lg_and_det} !')
             else:
                 await bot.say(f'Le serveur gérais déjà {lg_and_det} !')
@@ -213,23 +232,11 @@ async def lg(context, *args):
         message += f'{lgs_list[-2]} et {lgs_list[-1]}.'
 
         await bot.say(message)
-    # HELP
-    elif key_word == "help":
-        help_message = '```Markdown\n'
-        help_message += '# (HELP) Commande lg :\n'
-        help_message += '-' * 22 + '\n'
-        help_message += '$lg know <language>: Ajoute le badge "Connaît"\n'
-        help_message += '$lg learn <language>: Ajoute le badge "Apprend"\n'
-        help_message += '$lg forget <language>: Oublie <language>\n'
-        help_message += '$lg add <language>: Ajoute <language> au serveur (MODERATOR ONLY)\n'
-        help_message += '$lg rmv <language>: Retire <language> du serveur (MODERATOR ONLY)\n'
-        help_message += '$lg list : Liste des langues gérer par le serveur'
-        help_message += '```'
-        await bot.say(help_message)
     else:
-        await bot.say(f'Le serveur ne gère pas le mot-clé \'{key_word}\' ! Faites $lg help pour plus d\'informations.')
+        await bot.say(f'Le serveur ne gère pas le mot-clé \'{key_word}\' ! Faites $help lg pour plus d\'informations.')
 
-with open('token.txt', 'r') as config:
-    token = config.readlines()[0].split(' ')[0]
+# Read the token and run the bot
+with open('token.txt', 'r') as token_file:
+    token = token_file.readlines()[0].split(' ')[0]
 
 bot.run(token)
