@@ -1,13 +1,20 @@
 import discord
 from discord.ext import commands
+import sqlite3
+import sys
 
 # Init the bot
-bot = commands.Bot(command_prefix='$', description='Bot pour le Discord Linguisticae?.')
+bot = commands.Bot(command_prefix='$', description='Bot pour le Discord Linguisticae.')
 
 
 @bot.event
 async def on_ready():
     print('Logged in as %s' % bot.user.name)
+    createMemeDb = """CREATE TABLE IF NOT EXISTS meme(name text,url text,desc text);"""
+    with sqlite3.connect('meme.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute(createMemeDb)
+        conn.commit()
 
 
 @bot.command(pass_context=True)
@@ -71,40 +78,113 @@ async def rmvideol(context):
 
 @bot.command()
 async def meme(*args):
-    """Throw some memes   """
-    meme_name = args[0] if len(args) >= 1 else "list"
-    meme_config = await load_memeconfig()
-    if meme_name != 'list':
-        if meme_name in meme_config:
-            await bot.say(meme_config[meme_name]['url'])
-        else:
-            await bot.say(f'Le même ({meme_name}) est inconnu.')
+    """Affiche un meme (WIP)
+    $meme <name>"""
+
+    # check if it's the right length
+    if len(args) == 1:
+        name = args[0].lower()
     else:
+        await bot.say(f'Il faut seulement 1 argument, pas {len(args)}.')
+        return
+
+    try:
+        with sqlite3.connect('meme.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT url FROM meme WHERE name = ?;", (name,))
+            url = cursor.fetchone()[0]
+        await bot.say(url)
+    except:
+        await bot.say(f'Désolé il y a eu une erreur : {sys.exc_info()}')
+
+
+@bot.command(pass_context = True)
+async def memeadd(context, *args):
+    """[MOD ONLY] Ajoute un même à la base de donnée
+        $memeadd <name> <url> <desc>
+    """
+    author = context.message.author
+    server = context.message.server
+    # check if the author is a moderator
+    isModerator = discord.utils.get(server.roles, name='Modération') in author.roles
+    if not isModerator:
+        await bot.say('Seul les modérateurs peuvent utiliser cette commande')
+        return
+
+    # check if it's the right length
+    if len(args) >= 3:
+        name = args[0].lower()
+        url = args[1]
+        desc = str()
+        for word in args[2:-1]:
+            desc += f'{word} '
+        desc += args[-1]
+    else:
+        await bot.say(f'Il faut au moins 3 arguments, pas {len(args)}.')
+        return
+
+    try:
+        with sqlite3.connect('meme.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM meme WHERE name = ?", (name,))
+            if cursor.fetchone() is not None:
+                await bot.say(f'Le meme "{name}" existe déjà')
+                return
+            cursor.execute("INSERT INTO meme VALUES (?, ?, ?);", (name, url, desc))
+            conn.commit()
+        await bot.say(f'Le meme "{name}" a été ajouté avec l\'url : {url}')
+    except:
+        await bot.say(f'Désolé il y a eu une erreur : {sys.exc_info()}')
+
+
+@bot.command(pass_context = True)
+async def memermv(context, *args):
+    """[MOD ONLY] Retire un même à la base de donnée (WIP)
+        $memermv <name>
+    """
+    author = context.message.author
+    server = context.message.server
+    # check if the author is a moderator
+    isModerator = discord.utils.get(server.roles, name='Modération') in author.roles
+    if not isModerator:
+        await bot.say('Seul les modérateurs peuvent utiliser cette commande')
+        return
+
+    # check if it's the right length
+    if len(args) == 1:
+        name = args[0].lower()
+    else:
+        await bot.say(f'Il faut seulement 1 argument, pas {len(args)}.')
+        return
+
+    try:
+        with sqlite3.connect('meme.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM meme WHERE name=?;", (name,))
+            conn.commit()
+        await bot.say(f'Le meme "{name}" a été supprimé.')
+    except:
+        await bot.say(f'Désolé il y a eu une erreur : {sys.exc_info()}')
+
+
+@bot.command()
+async def memelist():
+    """Affiche la liste des mêmes (WIP)"""
+    # TODO: Meilleur affichage
+    try:
+        with sqlite3.connect('meme.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name, url, desc FROM meme;")
+            mmlist = cursor.fetchall()
         # Liste des mêmes
         message = '```Markdown\n'
-        meme_names = sorted(meme_config.keys())
-        for name in meme_names:
-            message += f'* {name}: {meme_config[name]["desc"]}\n'
+        for mm in mmlist:
+            message += f'* {mm[0]}: {mm[2]}\n'
         message += '```'
         await bot.say(message)
+    except:
+        await bot.say(f'Désolé il y a eu une erreur : {sys.exc_info()}')
 
-
-async def load_memeconfig():
-    """Load the meme config
-    Return
-    ------
-    meme_config = the meme config (dictionnary)
-    meme_config = {name: {'url':str, 'desc':desc}, ...}"""
-    config = {}
-    with open('meme_config.txt', 'r') as file:
-        lines = file.readlines()
-        for line in lines:
-            name = line.split(';')[0]
-            desc = line.split(';')[1]
-            url = line.split(';')[2][:-1]
-            config[name] = {'desc': desc, 'url': url}
-
-    return config
 
 # The help message
 help_message = 'Commandes de languages :\n'
@@ -234,6 +314,8 @@ async def lg(context, *args):
         await bot.say(message)
     else:
         await bot.say(f'Le serveur ne gère pas le mot-clé \'{key_word}\' ! Faites $help lg pour plus d\'informations.')
+
+
 
 # Read the token and run the bot
 with open('token.txt', 'r') as token_file:
