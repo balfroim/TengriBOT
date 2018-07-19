@@ -1,13 +1,19 @@
 import discord
 from discord.ext import commands
+import sqlite3
 
 # Init the bot
-bot = commands.Bot(command_prefix='$', description='Bot pour le Discord Linguisticae?.')
+bot = commands.Bot(command_prefix='$', description='Bot pour le Discord Linguisticae.')
 
 
 @bot.event
 async def on_ready():
     print('Logged in as %s' % bot.user.name)
+    createMemeDb = """CREATE TABLE IF NOT EXISTS meme(name text,url text,desc text)"""
+    with sqlite3.connect('meme.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute(createMemeDb)
+        conn.commit()
 
 
 @bot.command(pass_context=True)
@@ -71,6 +77,36 @@ async def rmvideol(context):
 
 @bot.command()
 async def meme(*args):
+    """Affiche un meme (WIP)
+    $meme <name>"""
+    pass
+
+
+@bot.command(pass_context = True)
+async def memeadd(context, *args):
+    """[MOD ONLY] Ajoute un même à la base de donnée (WIP)
+        $memeadd <name> <url> <desc>
+    """
+    pass
+
+
+@bot.command(pass_context = True)
+async def memermv(context, *args):
+    """[MOD ONLY] Retire un même à la base de donnée (WIP)
+        $memermv <name> <url> <desc>
+    """
+    pass
+
+
+@bot.command()
+async def memelist():
+    """Affiche la liste des mêmes (WIP)"""
+    pass
+
+
+# TODO: Delete when database version is fully implemented
+@bot.command()
+async def meme_old(*args):
     """Throw some memes   """
     meme_name = args[0] if len(args) >= 1 else "list"
     meme_config = await load_memeconfig()
@@ -88,7 +124,7 @@ async def meme(*args):
         message += '```'
         await bot.say(message)
 
-
+# TODO: Supprimer quand meme_db fully implemented
 async def load_memeconfig():
     """Load the meme config
     Return
@@ -234,6 +270,8 @@ async def lg(context, *args):
         await bot.say(message)
     else:
         await bot.say(f'Le serveur ne gère pas le mot-clé \'{key_word}\' ! Faites $help lg pour plus d\'informations.')
+
+
 
 # Read the token and run the bot
 with open('token.txt', 'r') as token_file:
