@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-class Lg:
+class Languages:
     """Commandes relatives aux langues"""
     def __init__(self, bot):
         self.bot = bot
