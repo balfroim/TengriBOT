@@ -3,7 +3,8 @@ from discord.ext import commands
 import sqlite3
 from Ideol import Ideol
 from Meme import Meme
-from Lg import Lg
+from Lg import Languages
+from Translation import Translation
 
 # Init the bot
 bot = commands.Bot(command_prefix='$', description='Bot pour le Discord Linguisticae.')
@@ -20,7 +21,8 @@ async def on_ready():
 
 bot.add_cog(Ideol(bot))
 bot.add_cog(Meme(bot))
-bot.add_cog(Lg(bot))
+bot.add_cog(Languages(bot))
+bot.add_cog(Translation(bot))
 
 # Read the token and run the bot
 with open('token.txt', 'r') as token_file:
