@@ -28,7 +28,7 @@ class Translation:
         # Check if the command has enough arguments
         if await Utils.enough_args(len(args), 3, self.bot):
             from_lg, to_lg = args[0], args[1]
-            txt = ' '.join(args[2])
+            txt = ' '.join(args[2:])
             # Do the translation
             translater = TTranslater(key=self.ts_key, text=txt, from_lang=from_lg, to_lang=to_lg)
             translation = translater.translate()
