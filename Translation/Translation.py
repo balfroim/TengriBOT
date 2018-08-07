@@ -3,32 +3,37 @@ from yandex import Translater
 
 
 class Translation:
-    """Commandes relative à la traduction rapide"""
+    """
+        Translation's command
+        Attributes:
+            bot: the bot's instance.
+            ts_key: the key of the translation API (Yandex).
+    """
     def __init__(self, bot):
         self.bot = bot
-        with open('yandex.txt', 'r') as key_file:
+        # Get the key of the translation API (Yandex).
+        with open('Translation/yandex.txt', 'r') as key_file:
             self.ts_key = key_file.readlines()[0]
 
     @commands.command(name='ts')
     async def translate(self, *args):
         """
-            Traduit un texte d'un "language A" vers un "language B".
+            Translate from "language A" to "language B".
             Parameters:
-                args[0] : "language A"
-                args[1] : "language B"
-                args[2:-1] : texte à traduire
+                args[0] : "language A".
+                args[1] : "language B".
+                args[2:-1] : text to translate.
         """
-        if len(args) < 3:
+        # Check if the command have enough arguments
+        if len(args) >= 3:
+            from_lg, to_lg = args[0], args[1]
+            txt = ' '.join(args[2])
+            # Do the translation
+            translater = TTranslater(key=self.ts_key, text=txt, from_lang=from_lg, to_lang=to_lg)
+            translation = translater.translate()
+            await self.bot.say(translation)
+        else:
             await self.bot.say(f'Il faut au moins 3 arguments, pas {len(args)}.')
-            return
-        from_lg = args[0]
-        to_lg = args[1]
-        txt = ' '.join(args[2])
-
-        # Do the translation
-        translater = TTranslater(key=self.ts_key, text=txt, from_lang=from_lg, to_lang=to_lg)
-        translation = translater.translate()
-        await self.bot.say(translation)
 
     @commands.command()
     async def tslist(self):
@@ -37,12 +42,12 @@ class Translation:
         """
         # Instantiate a translater object
         ts = TTranslater(key=self.ts_key, from_lang='en', to_lang='fr')
-        # Get the ISO code languages
-        with open('lgcode.txt', 'r') as lgcode_file:
+        # Get a list of language codes and their ISO code, take only the languages handle by the Yandex API
+        with open('Translation/lgcode.txt', 'r') as lgcode_file:
             lgISO = {sline[0]: sline[1].rstrip('\n') for sline in [line.split(',') for line in lgcode_file.readlines()]
                      if sline[0] in ts.valid_langs}
-        # Relate language code to the language in a comprehensible way
-        lgs_list = [f'({lgcode}) **{language}**' for lgcode, language in enumerate(lgISO)]
+        # Relate language code to the language in a comprehensible way (not like this comment...)
+        lgs_list = [f'({lgcode}) **{language}**' for lgcode, language in lgISO.items()]
         # Create the message to display
         message = f'L\'API de traduction gère les {len(lgs_list)} langue(s) suivantes : \n'
         message += ', '.join(lgs_list[:-1]) + f' et {lgs_list[-1]}'
@@ -50,7 +55,10 @@ class Translation:
 
 
 class TTranslater(Translater):
-    # Overriding du init de Translater en mode baraki à cause d'une erreur dans le module de Yandex
+    """
+        Dirty overriding (à la baraki) of the Yandex Translater class because of an error in the base class.
+        See Yandex's documentation to know what is each attributes. If it doesn't exists, then it's not my problem ;)
+    """
     def __init__(self, key=None, text=None, from_lang=None, to_lang=None, hint=None, ui=None):
         self.valid_lang = ['az', 'sq', 'am', 'en', 'ar', 'hy', 'af', 'eu', 'ba', 'be', 'bn', 'my', 'bg', 'bs', 'cy',
                            'hu', 'vi', 'ht', 'gl', 'nl', 'mrj', 'el', 'ka', 'gu', 'da', 'he', 'yi', 'id', 'ga', 'it',
