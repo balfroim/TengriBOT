@@ -1,16 +1,20 @@
-import discord
 from discord.ext import commands
-import sys
 import sqlite3
+from Utils import Utils
 
 
 class Meme:
-    """Commandes relatives aux memes"""
+    """
+        Memes.
+        Attributes:
+            bot: the bot's instance. [Bot]
+    """
+
     def __init__(self, bot):
         self.bot = bot
         # Create the meme data base if not exists
-        createMemeDb = """CREATE TABLE IF NOT EXISTS meme(name text,url text,desc text);"""
-        with sqlite3.connect('meme.db') as conn:
+        createMemeDb = """CREATE TABLE IF NOT EXISTS meme(name TEXT,url TEXT,desc TEXT);"""
+        with sqlite3.connect('Meme/meme.db') as conn:
             cursor = conn.cursor()
             cursor.execute(createMemeDb)
             conn.commit()
@@ -18,114 +22,94 @@ class Meme:
     @commands.command()
     async def meme(self, *args):
         """
-            Affiche un meme
-            $meme <name>
+            Display a meme.
+            Parameters:
+                args[0] : meme's name.
         """
-
-        # check if it's the right length
-        if len(args) == 1:
+        # Check if the command has enough arguments
+        if await Utils.enough_args(len(args), 1, self.bot):
             name = args[0].lower()
-        else:
-            await self.bot.say(f'Il faut seulement 1 argument, pas {len(args)}.')
-            return
-
-        try:
-            with sqlite3.connect('meme.db') as conn:
+            # Make a request to the database
+            with sqlite3.connect('Meme/meme.db') as conn:
                 cursor = conn.cursor()
                 cursor.execute("SELECT url FROM meme WHERE name = ?;", (name,))
-                url = cursor.fetchone()[0]
-            await self.bot.say(url)
-        except:
-            await self.bot.say(f'Désolé il y a eu une erreur : {sys.exc_info()}')
+                url = cursor.fetchone()
+            # Display the url if the meme exist
+            if url is not None:
+                await self.bot.say(url[0])
+            else:
+                await self.bot.say(f'Désolé, je ne connais pas le meme "{name}"')
 
     @commands.command(pass_context=True)
     async def memeadd(self, context, *args):
         """
-            [MOD ONLY] Ajoute un même à la base de donnée
-            $memeadd <name> <url> <desc>
+            [MOD ONLY] Add a meme to database.
+            Parameters
+            ----------
+                args[0]: meme's name. [str]
+                args[1]: meme's url. [str]
+                args[2:]: meme's description. [str]
         """
-        author = context.message.author
-        server = context.message.server
-        # check if the author is a moderator
-        isModerator = discord.utils.get(server.roles, name='Modération') in author.roles
-        if not isModerator:
-            await self.bot.say('Seul les modérateurs peuvent utiliser cette commande')
-            return
-
-        # check if it's the right length
-        if len(args) >= 3:
+        # Check if the author is a moderator
+        # Check if the command has enough arguments
+        if await Utils.is_moderator(context, self.bot) and await Utils.enough_args(len(args), 3, self.bot):
             name = args[0].lower()
             url = args[1]
-            desc = str()
-            for word in args[2:-1]:
-                desc += f'{word} '
-            desc += args[-1]
-        else:
-            await self.bot.say(f'Il faut au moins 3 arguments, pas {len(args)}.')
-            return
-
-        try:
-            with sqlite3.connect('meme.db') as conn:
+            desc = ' '.join(args[2:])
+            # Communicate with the database
+            with sqlite3.connect('Meme/meme.db') as conn:
                 cursor = conn.cursor()
                 # Check if the meme already exist
                 cursor.execute("SELECT * FROM meme WHERE name = ?", (name,))
-                if cursor.fetchone() is not None:
+                if cursor.fetchone() is None:
+                    # Add the meme to the database
+                    cursor.execute("INSERT INTO meme VALUES (?, ?, ?);", (name, url, desc))
+                    conn.commit()
+                    await self.bot.say(f'Le meme "{name}" a été ajouté avec l\'url : {url}')
+                else:
                     await self.bot.say(f'Le meme "{name}" existe déjà')
-                    return
-                # Create the meme in the database
-                cursor.execute("INSERT INTO meme VALUES (?, ?, ?);", (name, url, desc))
-                conn.commit()
-            await self.bot.say(f'Le meme "{name}" a été ajouté avec l\'url : {url}')
-        except:
-            await self.bot.say(f'Désolé il y a eu une erreur : {sys.exc_info()}')
 
     @commands.command(pass_context=True)
     async def memermv(self, context, *args):
         """
-            [MOD ONLY] Retire un même à la base de donnée
-            $memermv <name>
+            [MOD ONLY] Remove a meme from database.
+            Parameters
+            ----------
+                args[0]: meme's name. [str]
         """
-        author = context.message.author
-        server = context.message.server
-        # check if the author is a moderator
-        isModerator = discord.utils.get(server.roles, name='Modération') in author.roles
-        if not isModerator:
-            await self.bot.say('Seul les modérateurs peuvent utiliser cette commande')
-            return
-
-        # check if it's the right length
-        if len(args) == 1:
+        # Check if the author is a moderator
+        # Check if the command have enough arguments
+        if await Utils.is_moderator(context, self.bot) and await Utils.enough_args(len(args), 1, self.bot):
             name = args[0].lower()
-        else:
-            await self.bot.say(f'Il faut seulement 1 argument, pas {len(args)}.')
-            return
-
-        try:
-            with sqlite3.connect('meme.db') as conn:
+            # Communicate with the database
+            with sqlite3.connect('Meme/meme.db') as conn:
                 cursor = conn.cursor()
-                cursor.execute("DELETE FROM meme WHERE name=?;", (name,))
-                conn.commit()
-            await self.bot.say(f'Le meme "{name}" a été supprimé.')
-        except:
-            await self.bot.say(f'Désolé il y a eu une erreur : {sys.exc_info()}')
+                # Check if the meme already exist
+                cursor.execute("SELECT * FROM meme WHERE name = ?", (name,))
+                if cursor.fetchone() is not None:
+                    # Remove the meme from the database
+                    cursor.execute("DELETE FROM meme WHERE name=?;", (name,))
+                    conn.commit()
+                    await self.bot.say(f'Le meme "{name}" a été supprimé.')
+                else:
+                    await self.bot.say(f'Le meme "{name}" n\'existais pas.')
 
     @commands.command()
     async def memelist(self):
-        """Affiche la liste des mêmes"""
-        try:
-            with sqlite3.connect('meme.db') as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT name, url, desc FROM meme;")
-                mmlist = cursor.fetchall()
-            if len(mmlist) == 0:
-                await self.bot.say('Il n\'y a aucun même.')
-            else:
-                # Liste des mêmes
-                message = '```Markdown\n'
-                for mm in mmlist:
-                    name, desc = mm[0], mm[2]
-                    message += f'* {name}: {desc}\n'
-                message += '```'
-                await self.bot.say(message)
-        except:
-            await self.bot.say(f'Désolé il y a eu une erreur : {sys.exc_info()}')
+        """Display the meme list."""
+        # Get all the memes
+        with sqlite3.connect('Meme/meme.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name, url, desc FROM meme;")
+            mmlist = cursor.fetchall()
+        # Check if the list not empty
+        if mmlist is not None:
+            # Create the message to display
+            message = '```Markdown\n'
+            for mm in mmlist:
+                name, desc = mm[0], mm[2]
+                message += f'* {name}: {desc}\n'
+            message += '```'
+            await self.bot.say(message)
+        else:
+            await self.bot.say('Il n\'y a aucun même.')

@@ -25,7 +25,7 @@ class Translation:
                 args[1]: "language B". [str]
                 args[2:]: text to translate. [str]
         """
-        # Check if the command have enough arguments
+        # Check if the command has enough arguments
         if await Utils.enough_args(len(args), 3, self.bot):
             from_lg, to_lg = args[0], args[1]
             txt = ' '.join(args[2])
