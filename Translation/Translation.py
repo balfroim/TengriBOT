@@ -1,5 +1,6 @@
 from discord.ext import commands
 from yandex import Translater
+from Utils import Utils
 
 
 class Translation:
@@ -22,18 +23,16 @@ class Translation:
             Parameters:
                 args[0]: "language A". [str]
                 args[1]: "language B". [str]
-                args[2:-1]: text to translate. [str]
+                args[2:]: text to translate. [str]
         """
         # Check if the command have enough arguments
-        if len(args) >= 3:
+        if await Utils.enough_args(len(args), 3, self.bot):
             from_lg, to_lg = args[0], args[1]
             txt = ' '.join(args[2])
             # Do the translation
             translater = TTranslater(key=self.ts_key, text=txt, from_lang=from_lg, to_lang=to_lg)
             translation = translater.translate()
             await self.bot.say(translation)
-        else:
-            await self.bot.say(f'Il faut au moins 3 arguments, pas {len(args)}.')
 
     @commands.command()
     async def tslist(self):
