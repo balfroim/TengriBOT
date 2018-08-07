@@ -8,6 +8,12 @@ class Meme:
     """Commandes relatives aux memes"""
     def __init__(self, bot):
         self.bot = bot
+        # Create the meme data base if not exists
+        createMemeDb = """CREATE TABLE IF NOT EXISTS meme(name text,url text,desc text);"""
+        with sqlite3.connect('meme.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute(createMemeDb)
+            conn.commit()
 
     @commands.command()
     async def meme(self, *args):

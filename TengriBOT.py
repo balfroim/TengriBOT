@@ -1,10 +1,8 @@
-import discord
 from discord.ext import commands
-import sqlite3
-from Ideol import Ideol
-from Meme import Meme
-from Lg import Languages
-from Translation import Translation
+from LgRoles.Ideol import Ideol
+from Meme.Meme import Meme
+from LgRoles.Lg import Languages
+from Translation.Translation import Translation
 
 # Init the bot
 bot = commands.Bot(command_prefix='$', description='Bot pour le Discord Linguisticae.')
@@ -13,12 +11,9 @@ bot = commands.Bot(command_prefix='$', description='Bot pour le Discord Linguist
 @bot.event
 async def on_ready():
     print('Logged in as %s' % bot.user.name)
-    createMemeDb = """CREATE TABLE IF NOT EXISTS meme(name text,url text,desc text);"""
-    with sqlite3.connect('meme.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute(createMemeDb)
-        conn.commit()
 
+
+# Add all the commands
 bot.add_cog(Ideol(bot))
 bot.add_cog(Meme(bot))
 bot.add_cog(Languages(bot))
