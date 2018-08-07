@@ -6,8 +6,8 @@ class Translation:
     """
         Translation's command
         Attributes:
-            bot: the bot's instance.
-            ts_key: the key of the translation API (Yandex).
+            bot: the bot's instance. [Bot]
+            ts_key: the key of the translation API (Yandex). [str]
     """
     def __init__(self, bot):
         self.bot = bot
@@ -20,9 +20,9 @@ class Translation:
         """
             Translate from "language A" to "language B".
             Parameters:
-                args[0] : "language A".
-                args[1] : "language B".
-                args[2:-1] : text to translate.
+                args[0]: "language A". [str]
+                args[1]: "language B". [str]
+                args[2:-1]: text to translate. [str]
         """
         # Check if the command have enough arguments
         if len(args) >= 3:
@@ -38,7 +38,7 @@ class Translation:
     @commands.command()
     async def tslist(self):
         """
-            Listes des languages disponibles pour traduction
+            List all the languages handle by the Yandex API.
         """
         # Instantiate a translater object
         ts = TTranslater(key=self.ts_key, from_lang='en', to_lang='fr')
