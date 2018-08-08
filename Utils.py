@@ -94,8 +94,7 @@ class DatabaseCommunicator:
         #TODO: Make a better docstrings
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            request = f"SELECT {column} FROM {self.db_name}"
-            cursor.execute(request)
+            cursor.execute(f"SELECT {column} FROM {self.db_name}")
             result = cursor.fetchall()
         return result
 
