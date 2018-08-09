@@ -12,7 +12,6 @@ class Translation:
     """
     def __init__(self, bot):
         self.bot = bot
-        # Get the key of the translation API (Yandex).
         with open('Translation/yandex.txt', 'r') as key_file:
             self.ts_key = key_file.readlines()[0]
 

@@ -1,5 +1,4 @@
 from discord.ext import commands
-import sqlite3
 from Utils import Utils, DatabaseCommunicator
 
 

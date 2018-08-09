@@ -3,63 +3,71 @@ from discord.ext import commands
 
 
 class Ideol:
-    """Commandes relative aux idéolinguistes"""
+    """
+        Commands related to the "Ideolinguist" role
+        Attributes:
+            bot: the bot's instance. [Bot]
+    """
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(pass_context=True)
     async def ideolist(self, context):
-        """Donne la liste des idéolinguistes"""
-        # The server in which the command was executed
-        server = context.message.server
-        # The role of ideolinguist
-        ideol_role = discord.utils.get(server.roles, name='Idéolinguiste')
-
-        # The list of ideolinguists
-        ideol_list = sorted([user.name for user in server.members if (ideol_role in user.roles)])
-        # The number of ideolinguists
-        nb_ideol = len(ideol_list)
-
-        if nb_ideol > 1:
+        """
+            Display the list of "Ideolinguist".
+            Parameters:
+                context: the context in which the message is sent. [Context]
+        """
+        data = IdeolData(context)
+        ideol_list = sorted([user.name for user in data.server.members if (data.ideol_role in user.roles)])
+        if len(ideol_list) > 1:
             message = f'Il y a {nb_ideol} idéolinguiste(s) sur ce serveur : '
-            for ideolinguist in ideol_list[:-2]:
-                message += f'{ideolinguist}, '
-            message += f'{ideol_list[-2]} et {ideol_list[-1]}.'
+            message += ', '.join(ideol_list[:-1]) + f' et {ideol_list[-1]}.'
             await self.bot.say(message)
-        elif nb_ideol == 1:
+        elif len(ideol_list) == 1:
             await self.bot.say(f'Le seul idéolinguiste du serveur est {ideol_list[0]}.')
         else:
             await self.bot.say('Il n\'y as pas d\'idéolinguiste')
 
     @commands.command(pass_context=True)
     async def ideol(self, context):
-        """Ajoute le badge ideolinguiste"""
-        # The server in which the command was executed
-        server = context.message.server
-        # The user who executed the command
-        author = context.message.author
-        # The role of ideolinguist
-        ideol_role = discord.utils.get(server.roles, name='Idéolinguiste')
-
-        if not (ideol_role in author.roles):
-            await self.bot.add_roles(author, ideol_role)
+        """
+            Add the badge "Ideolinguist" to the author.
+            Parameters:
+                context: the context in which the message is sent. [Context]
+        """
+        data = IdeolData(context)
+        if data.ideol_role not in data.author.roles:
+            await self.bot.add_roles(data.author, data.ideol_role)
             await self.bot.say('Tu es maintenant idéolinguiste !')
         else:
             await self.bot.say('Tu étais déjà idéolinguiste !')
 
     @commands.command(pass_context=True)
     async def rmvideol(self, context):
-        """Retire le badge ideolinguiste"""
-        # The server in which the command was executed
-        server = context.message.server
-        # The user who executed the command
-        author = context.message.author
-        # The role of ideolinguist
-        ideol_role = discord.utils.get(server.roles, name='Idéolinguiste')
-
-        if ideol_role in author.roles:
-            await self.bot.remove_roles(author, ideol_role)
+        """
+            Remove the badge "Ideolinguist" to the author.
+            Parameters:
+                context: the context in which the message is sent. [Context]
+        """
+        data = IdeolData(context)
+        if data.ideol_role in data.author.roles:
+            await self.bot.remove_roles(data.author, data.ideol_role)
             await self.bot.say('Tu n\'es plus idéolinguiste !')
         else:
             await self.bot.say('Tu n\'étais pas idéolinguiste !')
 
+
+class IdeolData:
+    """
+        Contains useful data for the Ideol class
+        Attributes:
+            server: the server in which the command was executed. [Server]
+            author: the user who executed the command. [Client]
+            role: the "Ideolinguist" role. [Role]
+
+    """
+    def __init__(self, context):
+        self.server = context.message.server
+        self.author = context.message.author
+        self.ideol_role = discord.utils.get(self.server.roles, name='Idéolinguiste')
