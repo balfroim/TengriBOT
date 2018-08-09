@@ -48,7 +48,7 @@ class Ideol:
         """
             Remove the badge "Ideolinguist" to the author.
             Parameters:
-                context: the context in which the message is sent. [Context]
+                context: the context in which the message is sent. [Message]
         """
         data = IdeolData(context)
         if data.ideol_role in data.author.roles:

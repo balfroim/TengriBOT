@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from Utils import Utils
 
 class Languages:
     """Commandes relatives aux langues"""
@@ -12,38 +13,11 @@ class Languages:
             Ajoute le badge "Apprend"
             $lg learn <language>
         """
-        # The server in which the command was executed
-        server = context.message.server
-        # The user who executed the command
-        author = context.message.author
-        # The name of the language (Normalized)
-        language = args[0][0].upper() + args[0][1:].lower() if len(args) == 1 else "NOT_SPECIFIED"
-        # Language avec son determinant le ou l'
-        lg_and_det = "l'" + language if language[0] in 'AEUIO' else "le " + language
-        # La liste des languages.
-        lgs_list = sorted([r.name.split(" ")[1] for r in server.roles if r.name.startswith("Apprend")])
-
-        know_role_name = "Connaît %s" % language
-        learn_role_name = "Apprend %s" % language
-
-        # Check if the language is in the server
-        if language in lgs_list:
-            know_role = discord.utils.get(server.roles, name=know_role_name)
-            learn_role = discord.utils.get(server.roles, name=learn_role_name)
+        if len(args) == 1:
+            data = LgData(context, args[0])
+            await self.add_role('learn', data)
         else:
-            await self.bot.say(f'Le serveur ne gère pas encore {lg_and_det}, désolé !')
-            return
-
-        # Add the role
-        if learn_role in author.roles:
-            await self.bot.say(f'Tu apprends déjà {lg_and_det} !')
-        else:
-            if know_role in author.roles:
-                await self.bot.say(f'Tu ne connais plus {lg_and_det}, tu l\'apprends !')
-                await self.bot.remove_roles(author, know_role)
-            else:
-                await self.bot.say(f'Tu apprends maintenant {lg_and_det} !')
-            await self.bot.add_roles(author, learn_role)
+            await self.bot.say(f'Il faut un seul argument, pas {nb_args}.')
 
     @commands.command(pass_context=True)
     async def lgk(self, context, *args):
@@ -51,38 +25,32 @@ class Languages:
             Ajoute le badge "Connaît"
             $lgk <language>
         """
-        # The server in which the command was executed
-        server = context.message.server
-        # The user who executed the command
-        author = context.message.author
-        # The name of the language (Normalized)
-        language = args[0][0].upper() + args[0][1:].lower() if len(args) == 1 else "NOT_SPECIFIED"
-        # Language avec son determinant le ou l'
-        lg_and_det = "l'" + language if language[0] in 'AEUIO' else "le " + language
-        # La liste des languages.
-        lgs_list = sorted([r.name.split(" ")[1] for r in server.roles if r.name.startswith("Connaît")])
+        if len(args) == 1:
+            data = LgData(context, args[0])
+            await self.add_role('know', data)
+        else:
+            await self.bot.say(f'Il faut un seul argument, pas {nb_args}.')
 
-        know_role_name = "Connaît %s" % language
-        learn_role_name = "Apprend %s" % language
-
+    async def add_role(self, kw, data):
+        okw = 'learn' if kw == 'know' else 'know'
+        kw_fr = 'apprends' if kw == 'learn' else 'connais'
+        okw_fr = 'apprends' if okw == 'learn' else 'connais'
         # Check if the language is in the server
-        if language in lgs_list:
-            know_role = discord.utils.get(server.roles, name=know_role_name)
-            learn_role = discord.utils.get(server.roles, name=learn_role_name)
-        else:
-            await self.bot.say(f'Le serveur ne gère pas encore {lg_and_det}, désolé !')
-            return
-
-        # Add the role
-        if know_role in author.roles:
-            await self.bot.say(f'Tu connaîs déjà {lg_and_det} !')
-        else:
-            if learn_role in author.roles:
-                await self.bot.say(f'Bravo, tu as finis d\'apprendre {lg_and_det} !')
-                await self.bot.remove_roles(author, learn_role)
+        if data.language in data.lgs_list:
+            # Check if the author haven't already the learn role
+            if data.lg_roles[kw] not in data.author.roles:
+                # Check if the author have have already the know role
+                if data.lg_roles[okw] in data.author.roles:
+                    await self.bot.say(f'Tu ne/n\' {okw_fr} plus {data.lg_and_det}, tu l\'/le {kw_fr} !')
+                    await self.bot.remove_roles(data.author, data.lg_roles[okw])
+                else:
+                    await self.bot.say(f'Tu {kw_fr} maintenant {data.lg_and_det} !')
+                # Add the role
+                await self.bot.add_roles(data.author, data.lg_roles['learn'])
             else:
-                await self.bot.say(f'Tu connaîs maintenant {lg_and_det} !')
-            await self.bot.add_roles(author, know_role)
+                await self.bot.say(f'Tu {kw_fr} déjà {data.lg_and_det} !')
+        else:
+            await self.bot.say(f'Le serveur ne gère pas encore {data.lg_and_det}, désolé !')
 
     @commands.command(pass_context=True)
     async def lgf(self, context, *args):
@@ -90,37 +58,23 @@ class Languages:
             Oublie une langue.
             $lgf <language>
         """
-        # The server in which the command was executed
-        server = context.message.server
-        # The user who executed the command
-        author = context.message.author
-        # The name of the language (Normalized)
-        language = args[0][0].upper() + args[0][1:].lower() if len(args) == 1 else "NOT_SPECIFIED"
-        # Language avec son determinant le ou l'
-        lg_and_det = "l'" + language if language[0] in 'AEUIO' else "le " + language
-        # La liste des languages.
-        lgs_list = sorted([r.name.split(" ")[1] for r in server.roles if r.name.startswith("Connaît")])
-
-        know_role_name = "Connaît %s" % language
-        learn_role_name = "Apprend %s" % language
-
-        # Check if the language is in the server
-        if language in lgs_list:
-            know_role = discord.utils.get(server.roles, name=know_role_name)
-            learn_role = discord.utils.get(server.roles, name=learn_role_name)
+        if len(args) == 1:
+            data = LgData(context, args[0])
+            # Check if the language is in the server
+            if data.language in data.lgs_list:
+                # Remove the role
+                if data.lg_roles['know'] in data.author.roles:
+                    await self.bot.remove_roles(data.author, data.lg_roles['know'])
+                    await self.bot.say(f'Tu ne connais plus {data.lg_and_det}.')
+                elif data.lg_roles['learn'] in data.author.roles:
+                    await self.bot.remove_roles(data.author, data.lg_roles['learn'])
+                    await self.bot.say(f'Tu n\'apprend plus {data.lg_and_det}.')
+                else:
+                    await self.bot.say(f'Tu ne connaissais ni apprenais {data.lg_and_det} déjà.')
+            else:
+                await self.bot.say(f'Le serveur ne gère pas encore {data.lg_and_det}, désolé !')
         else:
-            await self.bot.say(f'Le serveur ne gère pas encore {lg_and_det}, désolé !')
-            return
-
-        # Remove the role
-        if know_role in author.roles:
-            await self.bot.remove_roles(author, know_role)
-            await self.bot.say(f'Tu ne connais plus {lg_and_det}.')
-        elif learn_role in author.roles:
-            await self.bot.remove_roles(author, learn_role)
-            await self.bot.say(f'Tu n\'apprend plus {lg_and_det}.')
-        else:
-            await self.bot.say(f'Tu ne connaissais ni apprenais {lg_and_det} déjà.')
+            await self.bot.say(f'Il faut un seul argument, pas {nb_args}.')
 
     @commands.command(pass_context=True)
     async def lgadd(self, context, *args):
@@ -128,30 +82,15 @@ class Languages:
             [MOD ONLY] Ajoute <language> au serveur.
             $lgadd <language>
         """
-        # The server in which the command was executed
-        server = context.message.server
-        # The user who executed the command
-        author = context.message.author
-        # The name of the language (Normalized)
-        language = args[0][0].upper() + args[0][1:].lower() if len(args) == 1 else "NOT_SPECIFIED"
-        # Language avec son determinant le ou l'
-        lg_and_det = "l'" + language if language[0] in 'AEUIO' else "le " + language
-        # La liste des languages.
-        lgs_list = sorted([r.name.split(" ")[1] for r in server.roles if r.name.startswith("Connaît")])
-
-        know_role_name = "Connaît %s" % language
-        learn_role_name = "Apprend %s" % language
-
-        # Create the role
-        if discord.utils.get(server.roles, name='Modération') in author.roles:
-            if language not in lgs_list:
-                await self.bot.create_role(server=server, name=know_role_name)
-                await self.bot.create_role(server=server, name=learn_role_name)
-                await self.bot.say(f'Le serveur gère maintenant {lg_and_det} !')
+        data = LgData(context, args[0])
+        if Utils.is_moderator(context, self.bot):
+            # Check if the role already exists
+            if data.language not in data.lgs_list:
+                await self.bot.create_role(server=data.server, name=data.lg_roles_name['learn'])
+                await self.bot.create_role(server=data.server, name=data.lg_roles_name['know'])
+                await self.bot.say(f'Le serveur gère maintenant {data.lg_and_det} !')
             else:
-                await self.bot.say(f'Le serveur gérais déjà {lg_and_det} !')
-        else:
-            await self.bot.say('Seul les modérateurs peuvent utiliser cet commande')
+                await self.bot.say(f'Le serveur gérais déjà {data.lg_and_det} !')
 
     @commands.command(pass_context=True)
     async def lgrmv(self, context, *args):
@@ -159,35 +98,15 @@ class Languages:
             [MOD ONLY] Retire <language> au serveur.
             $lgrmv <language>
         """
-        # The server in which the command was executed
-        server = context.message.server
-        # The user who executed the command
-        author = context.message.author
-        # The name of the language (Normalized)
-        language = args[0][0].upper() + args[0][1:].lower() if len(args) == 1 else "NOT_SPECIFIED"
-        # Language avec son determinant le ou l'
-        lg_and_det = "l'" + language if language[0] in 'AEUIO' else "le " + language
-        # La liste des languages.
-        lgs_list = sorted([r.name.split(" ")[1] for r in server.roles if r.name.startswith("Connaît")])
-
-        know_role_name = "Connaît %s" % language
-        learn_role_name = "Apprend %s" % language
-
-        # Check if the language is in the server
-        if language in lgs_list:
-            know_role = discord.utils.get(server.roles, name=know_role_name)
-            learn_role = discord.utils.get(server.roles, name=learn_role_name)
-        else:
-            await self.bot.say(f'Le serveur ne gère pas encore {lg_and_det}, désolé !')
-            return
-
-        # Remove the role
-        if discord.utils.get(server.roles, name='Modération') in author.roles:
-            await self.bot.delete_role(server, know_role)
-            await self.bot.delete_role(server, learn_role)
-            await self.bot.say(f'Le serveur ne gère plus {lg_and_det} !')
-        else:
-            await self.bot.say('Seul les modérateurs peuvent utiliser cet commande')
+        data = LgData(context, args[0])
+        if Utils.is_moderator(context, self.bot):
+            # Check if the language is in the server
+            if data.language in data.lgs_list:
+                await self.bot.delete_role(data.server, name=data.lg_roles_name['learn'])
+                await self.bot.delete_role(data.server, name=data.lg_roles_name['know'])
+                await self.bot.say(f'Le serveur ne gère plus {data.lg_and_det} !')
+            else:
+                await self.bot.say(f'Le serveur ne gère pas encore {data.lg_and_det}, désolé !')
 
     @commands.command(pass_context=True)
     async def lgklist(self, context, *args):
@@ -280,3 +199,25 @@ class Languages:
         message += f'{lgs_list[-2]} et {lgs_list[-1]}.'
 
         await self.bot.say(message)
+
+
+class LgData:
+    """
+        Contains useful data for the Languages class
+        Attributes:
+            server: the server in which the command was executed. [Server]
+            author: the user who executed the command. [Client]
+            language: the name of the language (Normalized). [Str]
+            lg_and_det: the language with its determinant. [Str]
+            lgs_list: the language list. [List(str)]
+            lg_roles: the roles "Connaît" and "Apprend". [Dict]
+    """
+    def __init__(self, context, language):
+        self.server = context.message.server
+        self.author = context.message.author
+        self.language = language[0].upper() + language[1:].lower()
+        self.lg_and_det = "l'" + language if language[0] in 'AEUIO' else "le " + language
+        self.lgs_list = sorted([r.name.split(" ")[1] for r in self.server.roles if r.name.startswith("Connaît")])
+        self.lg_roles_name = {'know': f'Connaît {language}', 'learn': f'Apprend {language}'}
+        self.lg_roles = {'know': discord.utils.get(self.server.roles, name=f'Connaît {language}'),
+                         'learn': discord.utils.get(self.server.roles, name=f'Apprend {language}')}
