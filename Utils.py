@@ -120,3 +120,35 @@ class DatabaseCommunicator:
             cdt_left, cdt_right = condition.split('=')
             cursor.execute(f"DELETE FROM {self.db_name} WHERE {cdt_left} = ?;", (cdt_right,))
             conn.commit()
+
+
+class Word:
+    """Use with word related function."""
+    voyelles = 'aeiouAEIOU'
+    # Dict use for quick conjugation
+    conjugate = {'learn': {'tu': 'apprends', 'ils': 'apprennent', 'il': 'apprend'},
+                 'know': {'tu': 'connais', 'ils': 'connaissent', 'il': 'connaît'}}
+    @staticmethod
+    def normalize(word):
+        """Normalize a word."""
+        return word[0].upper() + word[1:].lower()
+
+    @staticmethod
+    def elision(word_before, word_after):
+        """Make an elision if necessary. (https://fr.wikipedia.org/wiki/%C3%89lision)"""
+        if word_before[-1] in Word.voyelles and word_after[0] in Word.voyelles:
+            return f'{word_before[:-1]}\'{word_after}'
+        else:
+            return f'{word_before} {word_after}'
+
+    @staticmethod
+    def plural(amount, word):
+        """Return the plural form of a word (if in plural)"""
+        if word[-1] in 'szx' and amount <= 1:
+            return word
+        elif word.endwith('al'):
+            # TODO: care about exceptions
+            # (https://fr.wiktionary.org/wiki/Annexe:Pluriels_irr%C3%A9guliers_en_fran%C3%A7ais)
+            return f'{word[:-2]}aux'
+        else:
+            return f'{word[-1]}s'

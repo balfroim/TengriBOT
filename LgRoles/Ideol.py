@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-
+from Utils import Word
 
 class Ideol:
     """
@@ -16,12 +16,12 @@ class Ideol:
         """
             Display the list of "Ideolinguist".
             Parameters:
-                context: the context in which the message is sent. [Context]
+                context: the context in which the message is sent. [Message]
         """
         data = IdeolData(context)
         ideol_list = sorted([user.name for user in data.server.members if (data.ideol_role in user.roles)])
         if len(ideol_list) > 1:
-            message = f'Il y a {nb_ideol} idéolinguiste(s) sur ce serveur : '
+            message = f'Il y a {nb_ideol} idéolinguistes sur ce serveur : '
             message += ', '.join(ideol_list[:-1]) + f' et {ideol_list[-1]}.'
             await self.bot.say(message)
         elif len(ideol_list) == 1:
@@ -34,7 +34,7 @@ class Ideol:
         """
             Add the badge "Ideolinguist" to the author.
             Parameters:
-                context: the context in which the message is sent. [Context]
+                context: the context in which the message is sent. [Message]
         """
         data = IdeolData(context)
         if data.ideol_role not in data.author.roles:
