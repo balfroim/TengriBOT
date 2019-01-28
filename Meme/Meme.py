@@ -35,16 +35,15 @@ class Meme:
     @commands.command(pass_context=True)
     async def memeadd(self, context, *args):
         """
-            [MOD ONLY] Add a meme to database.
+            Add a meme to database.
             Parameters
             ----------
                 args[0]: meme's name. [str]
                 args[1]: meme's url. [str]
                 args[2:]: meme's description. [str]
         """
-        # Check if the author is a moderator
         # Check if the command has enough arguments
-        if await Utils.is_moderator(context, self.bot) and await Utils.enough_args(len(args), 3, self.bot):
+        if await Utils.enough_args(len(args), 3, self.bot):
             name = args[0].lower()
             url = args[1]
             desc = ' '.join(args[2:])

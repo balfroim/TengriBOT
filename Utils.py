@@ -1,6 +1,8 @@
 import discord
 import sqlite3
 
+modo_rolenames = {"igidarúren «prophètes»", "díngen «divinités»", "Admin"}
+
 
 class Utils:
     """Some useful static methods."""
@@ -16,8 +18,7 @@ class Utils:
                 True if author is a moderator, False otherwise.
         """
         author = context.message.author
-        server = context.message.server
-        if discord.utils.get(server.roles, name='Modération') in author.roles:
+        if not modo_rolenames.isdisjoint({role.name for role in author.roles}):
             return True
         else:
             await bot.say('Seul les modérateurs peuvent utiliser cette commande !')
