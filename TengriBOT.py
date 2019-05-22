@@ -2,7 +2,7 @@ from discord.ext import commands
 from LgRoles.Ideol import Ideol
 from Meme.Meme import Meme
 from LgRoles.Lg import Languages
-from Translation.Translation import Translation
+# from Translation.Translation import Translation
 
 # Init the bot
 bot = commands.Bot(command_prefix='$', description='Bot pour le Discord Linguisticae.')
@@ -17,7 +17,7 @@ async def on_ready():
 bot.add_cog(Ideol(bot))
 bot.add_cog(Meme(bot))
 bot.add_cog(Languages(bot))
-bot.add_cog(Translation(bot))
+# bot.add_cog(Translation(bot))
 
 # Read the token and run the bot
 with open('token.txt', 'r') as token_file:
