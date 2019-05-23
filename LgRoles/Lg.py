@@ -3,7 +3,7 @@ from discord.ext import commands
 from Utils import Utils, Word
 
 
-class Languages:
+class Languages(commands.Cog):
     """
         Languages's command.
         Attributes:

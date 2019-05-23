@@ -2,7 +2,7 @@ from discord.ext import commands
 from Utils import Utils, DatabaseCommunicator
 
 
-class Meme:
+class Meme(commands.Cog):
     """
         Memes.
         Attributes:

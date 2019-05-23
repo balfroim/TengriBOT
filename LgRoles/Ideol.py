@@ -2,7 +2,8 @@ import discord
 from discord.ext import commands
 from Utils import Word
 
-class Ideol:
+
+class Ideol(commands.Cog):
     """
         Commands related to the "Ideolinguist" role
         Attributes:

@@ -2,6 +2,8 @@ from discord.ext import commands
 from LgRoles.Ideol import Ideol
 from Meme.Meme import Meme
 from LgRoles.Lg import Languages
+
+# Notes: Ignore this module for now
 # from Translation.Translation import Translation
 
 # Init the bot
