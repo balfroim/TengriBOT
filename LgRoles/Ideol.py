@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from Utils import Word
 
 
 class Ideol(commands.Cog):
@@ -19,16 +18,19 @@ class Ideol(commands.Cog):
             Parameters:
                 context: the context in which the message is sent. [Message]
         """
-        data = IdeolData(context)
-        ideol_list = sorted([user.name for user in data.server.members if (data.ideol_role in user.roles)])
-        if len(ideol_list) > 1:
+        server = context.message.guild
+        channel = context.message.channel
+        ideol_role = discord.utils.get(server.roles, name='Idéolinguiste')
+        ideol_list = sorted([user.name for user in server.members if (ideol_role in user.roles)])
+        nb_ideol = len(ideol_list)
+        if nb_ideol > 1:
             message = f'Il y a {nb_ideol} idéolinguistes sur ce serveur : '
             message += ', '.join(ideol_list[:-1]) + f' et {ideol_list[-1]}.'
-            await self.bot.say(message)
-        elif len(ideol_list) == 1:
-            await self.bot.say(f'Le seul idéolinguiste du serveur est {ideol_list[0]}.')
+            await channel.send(message)
+        elif nb_ideol == 1:
+            await channel.send(f'Le seul idéolinguiste du serveur est {ideol_list[0]}.')
         else:
-            await self.bot.say('Il n\'y as pas d\'idéolinguiste')
+            await channel.send('Il n\'y as pas d\'idéolinguiste')
 
     @commands.command(pass_context=True)
     async def ideol(self, context):
@@ -37,12 +39,15 @@ class Ideol(commands.Cog):
             Parameters:
                 context: the context in which the message is sent. [Message]
         """
-        data = IdeolData(context)
-        if data.ideol_role not in data.author.roles:
-            await self.bot.add_roles(data.author, data.ideol_role)
-            await self.bot.say('Tu es maintenant idéolinguiste !')
+        server = context.message.guild
+        channel = context.message.channel
+        author = context.message.author
+        ideol_role = discord.utils.get(server.roles, name='Idéolinguiste')
+        if ideol_role not in author.roles:
+            await author.add_roles(ideol_role)
+            await channel.send('Tu es maintenant idéolinguiste !')
         else:
-            await self.bot.say('Tu étais déjà idéolinguiste !')
+            await channel.send('Tu étais déjà idéolinguiste !')
 
     @commands.command(pass_context=True)
     async def rmvideol(self, context):
@@ -51,24 +56,12 @@ class Ideol(commands.Cog):
             Parameters:
                 context: the context in which the message is sent. [Message]
         """
-        data = IdeolData(context)
-        if data.ideol_role in data.author.roles:
-            await self.bot.remove_roles(data.author, data.ideol_role)
-            await self.bot.say('Tu n\'es plus idéolinguiste !')
+        server = context.message.guild
+        channel = context.message.channel
+        author = context.message.author
+        ideol_role = discord.utils.get(server.roles, name='Idéolinguiste')
+        if ideol_role in author.roles:
+            await author.remove_roles(ideol_role)
+            await channel.send('Tu n\'es plus idéolinguiste !')
         else:
-            await self.bot.say('Tu n\'étais pas idéolinguiste !')
-
-
-class IdeolData:
-    """
-        Contains useful data for the Ideol class
-        Attributes:
-            server: the server in which the command was executed. [Server]
-            author: the user who executed the command. [Client]
-            role: the "Ideolinguist" role. [Role]
-
-    """
-    def __init__(self, context):
-        self.server = context.message.server
-        self.author = context.message.author
-        self.ideol_role = discord.utils.get(self.server.roles, name='Idéolinguiste')
+            await channel.send('Tu n\'étais pas idéolinguiste !')
