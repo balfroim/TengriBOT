@@ -27,13 +27,13 @@ class Utils:
     @staticmethod
     async def enough_args(nb_args, min_args, bot):
         """
-            Check the author is a moderator.
+            Check that the user give enough arguments.
             Parameters:
                 nb_args: the number of arguments. [int >= 0]
                 min_args: the minimum of arguments. [int >= 0]
                 bot: the bot's instance. [Bot]
             Return:
-                True if author is a moderator, False otherwise.
+                True if user give enough arguments.
         """
         if nb_args >= min_args:
             return True
