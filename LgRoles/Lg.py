@@ -3,6 +3,58 @@ from discord.ext import commands
 from Utils import Utils, Word
 
 
+async def display_speaker_list(context, data, kw):
+    """
+        Factorisation for the command lgklist and lgflist
+        Parameters:
+            kw: keyword either 'know' or 'learn'. [Str]
+            data: useful data for the Languages class. [LgData]
+            :param context:
+    """
+    speaker_list = sorted([user.name for user in data.server.members if (data.lg_roles[kw] in user.roles)])
+    # Display the list
+    if len(speaker_list) > 1:
+        message = f'{len(speaker_list)} personnes {Word.conjugate[kw]["ils"]} {data.lg_and_det}: '
+        message += ', '.join(speaker_list[:-1]) + f' et {speaker_list[-1]}.'
+    elif len(speaker_list) == 1:
+        message = f'Seul {speaker_list[0]} {Word.conjugate[kw]["il"]} {data.lg_and_det}.'
+    else:
+        message = f'Personne {Word.elision("ne", Word.conjugate[kw]["il"])} {data.lg_and_det}.'
+    await context.channel.send(message)
+
+
+async def add_role(kw, lang, context):
+    """
+        Add either a know or a learn role.
+        Parameters:
+            kw: keyword either 'know' or 'learn'. [Str]
+            lang: the language
+            data: useful data for the Languages class. [LgData]
+    """
+    opp_kw = 'learn' if kw == 'know' else 'know'
+
+    lg_ut = LgUtility(context, lang)
+
+    # Check if the language is in the server
+    if lang in lg_ut.lgs_list:
+        # Check if the author haven't already the role
+        if lg_ut.lg_roles[kw] not in lg_ut.author.roles:
+            # Check if the author have already the other role
+            if lg_ut.lg_roles[opp_kw] in lg_ut.author.roles:
+                await lg_ut.channel.send(f'Tu {Word.elision("ne", Word.conjugate[opp_kw]["tu"])} '
+                                   f'plus {lg_ut.lg_and_det}, '
+                                   f'tu {Word.elision("le", Word.conjugate[kw]["tu"])} !')
+                await context.message.author.remove_roles(lg_ut.lg_roles[opp_kw])
+            else:
+                await lg_ut.channel.send(f'Tu {Word.conjugate[kw]["tu"]} maintenant {lg_ut.lg_and_det} !')
+            # Add the role
+            await context.message.author.add_roles(lg_ut.lg_roles[kw])
+        else:
+            await lg_ut.channel.send(f'Tu {Word.conjugate[kw]["tu"]} déjà {lg_ut.lg_and_det} !')
+    else:
+        await lg_ut.channel.send(f'Le serveur ne gère pas encore {lg_ut.lg_and_det}, désolé !')
+
+
 class Languages(commands.Cog):
     """
         Languages's command.
@@ -22,8 +74,8 @@ class Languages(commands.Cog):
         """
         # Check if the command has enough arguments
         if await Utils.enough_args(len(args), 1, self.bot):
-            data = LgData(context, args[0])
-            await self.add_role('learn', data)
+            # data = LgData(context, args[0])
+            await add_role('learn', args[0], context)
 
     @commands.command(pass_context=True)
     async def lgk(self, context, *args):
@@ -35,35 +87,7 @@ class Languages(commands.Cog):
         """
         # Check if the command has enough arguments
         if await Utils.enough_args(len(args), 1, self.bot):
-            data = LgData(context, args[0])
-            await self.add_role('know', data)
-
-    async def add_role(self, kw, data):
-        """
-            Factorisation for the command lgk and lgf
-            Parameters:
-                kw: keyword either 'know' or 'learn'. [Str]
-                data: useful data for the Languages class. [LgData]
-        """
-        okw = 'learn' if kw == 'know' else 'know'
-        # Check if the language is in the server
-        if data.language in data.lgs_list:
-            # Check if the author haven't already the role
-            if data.lg_roles[kw] not in data.author.roles:
-                # Check if the author have already the other role
-                if data.lg_roles[okw] in data.author.roles:
-                    await self.bot.say(f'Tu {Word.elision("ne", Word.conjugate[okw]["tu"])} '
-                                       f'plus {data.lg_and_det}, '
-                                       f'tu {Word.elision("le", Word.conjugate[kw]["tu"])} !')
-                    await self.bot.remove_roles(data.author, data.lg_roles[okw])
-                else:
-                    await self.bot.say(f'Tu {Word.conjugate[kw]["tu"]} maintenant {data.lg_and_det} !')
-                # Add the role
-                await self.bot.add_roles(data.author, data.lg_roles[kw])
-            else:
-                await self.bot.say(f'Tu {Word.conjugate[kw]["tu"]} déjà {data.lg_and_det} !')
-        else:
-            await self.bot.say(f'Le serveur ne gère pas encore {data.lg_and_det}, désolé !')
+            await add_role('know', args[0], context)
 
     @commands.command(pass_context=True)
     async def lgf(self, context, *args):
@@ -75,19 +99,20 @@ class Languages(commands.Cog):
         """
         # Check if the command has enough arguments
         if await Utils.enough_args(len(args), 1, self.bot):
-            data = LgData(context, args[0])
+            lg_ut = LgUtility(context, args[0])
             # Check if the language is in the server
-            if data.language in data.lgs_list:
-                hadRole = False
+            if lg_ut.language in lg_ut.lgs_list:
+                had_role = False
                 for kw in ('know', 'learn'):
-                    if data.lg_roles[kw] in data.author.roles:
-                        await self.bot.remove_roles(data.author, data.lg_roles[kw])
-                        await self.bot.say(f'Tu {Word.elision("ne", Word.conjugate[kw]["tu"])} plus {data.lg_and_det}.')
-                        hadRole = True
-                if not hadRole:
-                    await self.bot.say(f'Tu ne connaissais ni apprenais {data.lg_and_det} déjà.')
+                    if lg_ut.lg_roles[kw] in lg_ut.author.roles:
+                        await context.message.author.remove_roles(lg_ut.lg_roles[kw])
+                        await lg_ut.channel.send(f'Tu {Word.elision("ne", Word.conjugate[kw]["tu"])} plus '
+                                                 f'{lg_ut.lg_and_det}.')
+                        had_role = True
+                if not had_role:
+                    await lg_ut.channel.send(f'Tu ne connaissais ni apprenais {lg_ut.lg_and_det} déjà.')
             else:
-                await self.bot.say(f'Le serveur ne gère pas encore {data.lg_and_det}, désolé !')
+                await lg_ut.channel.send(f'Le serveur ne gère pas encore {lg_ut.lg_and_det}, désolé !')
 
     @commands.command(pass_context=True)
     async def lgadd(self, context, *args):
@@ -100,14 +125,15 @@ class Languages(commands.Cog):
         # Check if the author is a moderator
         # Check if the command has enough arguments
         if await Utils.is_moderator(context, self.bot) and await Utils.enough_args(len(args), 1, self.bot):
-            data = LgData(context, args[0])
+            lg_ut = LgUtility(context, args[0])
             # Check if the role already exists
-            if data.language not in data.lgs_list:
-                await self.bot.create_role(server=data.server, name=data.lg_roles_name['learn'])
-                await self.bot.create_role(server=data.server, name=data.lg_roles_name['know'])
-                await self.bot.say(f'Le serveur gère maintenant {data.lg_and_det} !')
+            if lg_ut.language not in lg_ut.lgs_list:
+                #FIXME: Create role server level
+                await self.bot.create_role(server=lg_ut.server, name=lg_ut.lg_roles_name['learn'])
+                await self.bot.create_role(server=lg_ut.server, name=lg_ut.lg_roles_name['know'])
+                await context.channel.send(f'Le serveur gère maintenant {lg_ut.lg_and_det} !')
             else:
-                await self.bot.say(f'Le serveur gérais déjà {data.lg_and_det} !')
+                await context.channel.send(f'Le serveur gérais déjà {lg_ut.lg_and_det} !')
 
     @commands.command(pass_context=True)
     async def lgrmv(self, context, *args):
@@ -120,14 +146,15 @@ class Languages(commands.Cog):
         # Check if the author is a moderator
         # Check if the command has enough arguments
         if await Utils.is_moderator(context, self.bot) and await Utils.enough_args(len(args), 1, self.bot):
-            data = LgData(context, args[0])
+            lg_ut = LgUtility(context, args[0])
             # Check if the language is in the server
-            if data.language in data.lgs_list:
-                await self.bot.delete_role(server=data.server, role=data.lg_roles['learn'])
-                await self.bot.delete_role(server=data.server, role=data.lg_roles['know'])
-                await self.bot.say(f'Le serveur ne gère plus {data.lg_and_det} !')
+            if lg_ut.language in lg_ut.lgs_list:
+                # FIXME: Remove role server level
+                await self.bot.delete_role(server=lg_ut.server, role=lg_ut.lg_roles['learn'])
+                await self.bot.delete_role(server=lg_ut.server, role=lg_ut.lg_roles['know'])
+                await context.channel.send(f'Le serveur ne gère plus {lg_ut.lg_and_det} !')
             else:
-                await self.bot.say(f'Le serveur ne gère pas encore {data.lg_and_det}, désolé !')
+                await context.channel.send(f'Le serveur ne gère pas encore {lg_ut.lg_and_det}, désolé !')
 
     @commands.command(pass_context=True)
     async def lgklist(self, context, *args):
@@ -139,12 +166,12 @@ class Languages(commands.Cog):
         """
         # Check if the command has enough arguments
         if await Utils.enough_args(len(args), 1, self.bot):
-            data = LgData(context, args[0])
+            lg_ut = LgUtility(context, args[0])
             # Check if the language is in the server
-            if data.language in data.lgs_list:
-                await self.display_speaker_list(data, 'know')
+            if lg_ut.language in lg_ut.lgs_list:
+                await display_speaker_list(context, lg_ut, 'know')
             else:
-                await self.bot.say(f'Le serveur ne gère pas encore {data.lg_and_det}, désolé !')
+                await context.channel.send(f'Le serveur ne gère pas encore {lg_ut.lg_and_det}, désolé !')
 
     @commands.command(pass_context=True)
     async def lgllist(self, context, *args):
@@ -156,30 +183,12 @@ class Languages(commands.Cog):
         """
         # Check if the command has enough arguments
         if await Utils.enough_args(len(args), 1, self.bot):
-            data = LgData(context, args[0])
+            lg_ut = LgUtility(context, args[0])
             # Check if the language is in the server
-            if data.language in data.lgs_list:
-                await self.display_speaker_list(data, 'learn')
+            if lg_ut.language in lg_ut.lgs_list:
+                await display_speaker_list(context, lg_ut, 'learn')
             else:
-                await self.bot.say(f'Le serveur ne gère pas encore {data.lg_and_det}, désolé !')
-
-    async def display_speaker_list(self, data, kw):
-        """
-            Factorisation for the command lgklist and lgflist
-            Parameters:
-                kw: keyword either 'know' or 'learn'. [Str]
-                data: useful data for the Languages class. [LgData]
-        """
-        speaker_list = sorted([user.name for user in data.server.members if (data.lg_roles[kw] in user.roles)])
-        # Display the list
-        if len(speaker_list) > 1:
-            message = f'{len(speaker_list)} personnes {Word.conjugate[kw]["ils"]} {data.lg_and_det}: '
-            message += ', '.join(speaker_list[:-1]) + f' et {speaker_list[-1]}.'
-        elif len(speaker_list) == 1:
-            message = f'Seul {speaker_list[0]} {Word.conjugate[kw]["il"]} {data.lg_and_det}.'
-        else:
-            message = f'Personne {Word.elision("ne", Word.conjugate[kw]["il"])} {data.lg_and_det}.'
-        await self.bot.say(message)
+                await context.channel.send(f'Le serveur ne gère pas encore {lg_ut.lg_and_det}, désolé !')
 
     @commands.command(pass_context=True)
     async def lglist(self, context):
@@ -189,28 +198,21 @@ class Languages(commands.Cog):
                 context: the context in which the message is sent. [Message]
         """
         # The server in which the command was executed
-        server = context.message.server
+        server = context.message.guild
         # La liste des languages.
         lgs_list = sorted([r.name.split(" ")[1] for r in server.roles if r.name.startswith("Connaît")])
         message = f'Le serveur gère les {len(lgs_list)} langue(s) suivantes : '
         message += ', '.join(lgs_list[:-1]) + f' et {lgs_list[-1]}.'
-        await self.bot.say(message)
+        await context.channel.send(message)
 
 
-class LgData:
+class LgUtility:
     """
-        Contains useful data for the Languages class
-        Attributes:
-            server: the server in which the command was executed. [Server]
-            author: the user who executed the command. [Client]
-            language: the name of the language (Normalized). [Str]
-            lg_and_det: the language with its determinant. [Str]
-            lgs_list: the language list. [List(str)]
-            lg_roles_names: the roles "Connaît" and "Apprend" 's names. [Dict[Str]]
-            lg_roles: the roles "Connaît" and "Apprend". [Dict[Role]]
+        Contains useful variable for method of the Lg class.
     """
     def __init__(self, context, language):
-        self.server = context.message.server
+        self.channel = context.message.channel
+        self.server = context.message.guild
         self.author = context.message.author
         self.language = Word.normalize(language)
         self.lg_and_det = Word.elision('le', self.language.lower())

@@ -14,8 +14,8 @@ class Meme(commands.Cog):
         self.bot = bot
         self.db_comm = DatabaseCommunicator('Meme/meme.db', 'meme', 'name TEXT, url TEXT, desc TEXT')
 
-    @commands.command()
-    async def meme(self, *args):
+    @commands.command(pass_context=True)
+    async def meme(self, context, *args):
         """
             Display a meme.
             Parameters:
@@ -28,9 +28,9 @@ class Meme(commands.Cog):
             url = self.db_comm.select_w_cdt('url', f'name={name}')
             # Display the url if the meme exist
             if url != list():
-                await self.bot.say(url[0][0])
+                await context.channel.send(url[0][0])
             else:
-                await self.bot.say(f'Désolé, je ne connais pas le meme "{name}"')
+                await context.channel.send(f'Désolé, je ne connais pas le meme "{name}"')
 
     @commands.command(pass_context=True)
     async def memeadd(self, context, *args):
@@ -51,9 +51,9 @@ class Meme(commands.Cog):
             # Communicate with the database
             if not meme_already_exists:
                 self.db_comm.insert((name, url, desc))
-                await self.bot.say(f'Le meme "{name}" a été ajouté avec l\'url : {url}')
+                await context.channel.send(f'Le meme "{name}" a été ajouté avec l\'url : {url}')
             else:
-                await self.bot.say(f'Le meme "{name}" existe déjà')
+                await context.channel.send(f'Le meme "{name}" existe déjà')
 
     @commands.command(pass_context=True)
     async def memermv(self, context, *args):
@@ -70,12 +70,12 @@ class Meme(commands.Cog):
             meme_already_exists = self.db_comm.select_w_cdt('*', f'name={name}') != list()
             if meme_already_exists:
                 self.db_comm.deletefrom(f'name={name}')
-                await self.bot.say(f'Le meme "{name}" a été supprimé.')
+                await context.channel.send(f'Le meme "{name}" a été supprimé.')
             else:
-                await self.bot.say(f'Le meme "{name}" n\'existais pas.')
+                await context.channel.send(f'Le meme "{name}" n\'existais pas.')
 
-    @commands.command()
-    async def memelist(self):
+    @commands.command(pass_context=True)
+    async def memelist(self, context):
         """Display the meme list."""
         # Get all the memes
         mmlist = self.db_comm.select('name, url, desc')
@@ -83,6 +83,6 @@ class Meme(commands.Cog):
         if mmlist is not None:
             # Create the message to display
             message = '```Markdown\n' + '\n'.join([f'* {name}: {desc}' for (name, url, desc) in mmlist]) + '\n```'
-            await self.bot.say(message)
+            await context.channel.send(message)
         else:
-            await self.bot.say('Il n\'y a aucun meme.')
+            await context.channel.send('Il n\'y a aucun meme.')
