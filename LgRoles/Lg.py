@@ -200,7 +200,7 @@ class Languages(commands.Cog):
         # The server in which the command was executed
         server = context.message.guild
         # La liste des languages.
-        lgs_list = sorted([r.name.split(" ")[1] for r in server.roles if r.name.startswith("Connaît")])
+        lgs_list = sorted([r.name.split(" ")[1] for r in server.roles if r.name.startswith("Connait")])
         message = f'Le serveur gère les {len(lgs_list)} langue(s) suivantes : '
         message += ', '.join(lgs_list[:-1]) + f' et {lgs_list[-1]}.'
         await context.channel.send(message)
@@ -216,7 +216,7 @@ class LgUtility:
         self.author = context.message.author
         self.language = Word.normalize(language)
         self.lg_and_det = Word.elision('le', self.language.lower())
-        self.lgs_list = sorted([r.name.split(" ")[1] for r in self.server.roles if r.name.startswith("Connaît")])
+        self.lgs_list = sorted([r.name.split(" ")[1] for r in self.server.roles if r.name.startswith("Connait")])
         self.lg_roles_name = {'know': f'Connaît {self.language}', 'learn': f'Apprend {self.language}'}
-        self.lg_roles = {'know': discord.utils.get(self.server.roles, name=f'Connaît {self.language}'),
+        self.lg_roles = {'know': discord.utils.get(self.server.roles, name=f'Connait {self.language}'),
                          'learn': discord.utils.get(self.server.roles, name=f'Apprend {self.language}')}
