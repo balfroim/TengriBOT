@@ -48,7 +48,7 @@ async def add_role(kw, lang, context):
             else:
                 await lg_ut.channel.send(f'Tu {Word.conjugate[kw]["tu"]} maintenant {lg_ut.lg_and_det} !')
             # Add the role
-            await context.message.author.add_roles(lg_ut.lg_roles[kw])
+            await context.message.author.add_roles(lg_ut.lg_roles[lg_ut.language])
         else:
             await lg_ut.channel.send(f'Tu {Word.conjugate[kw]["tu"]} déjà {lg_ut.lg_and_det} !')
     else:
