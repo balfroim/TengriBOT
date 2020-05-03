@@ -128,7 +128,7 @@ class Word:
     voyelles = 'aeiouAEIOU'
     # Dict use for quick conjugation
     conjugate = {'learn': {'tu': 'apprends', 'ils': 'apprennent', 'il': 'apprend'},
-                 'know': {'tu': 'connais', 'ils': 'connaissent', 'il': 'connaît'}}
+                 'know': {'tu': 'connais', 'ils': 'connaissent', 'il': 'connait'}}
     @staticmethod
     def normalize(word):
         """Normalize a word."""
