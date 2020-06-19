@@ -1,7 +1,5 @@
 from discord.ext import commands
-from LgRoles.Ideol import Ideol
-from Meme.Meme import Meme
-from LgRoles.Lg import Languages
+from Assignations import Assignations
 
 # Notes: Ignore this module for now
 # from Translation.Translation import Translation
@@ -16,9 +14,7 @@ async def on_ready():
 
 
 # Add all the commands
-bot.add_cog(Ideol(bot))
-bot.add_cog(Meme(bot))
-bot.add_cog(Languages(bot))
+bot.add_cog(Assignations(bot))
 
 # Read the token and run the bot
 with open('token.txt', 'r') as token_file:
