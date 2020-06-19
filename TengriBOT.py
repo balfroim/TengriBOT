@@ -19,7 +19,6 @@ async def on_ready():
 bot.add_cog(Ideol(bot))
 bot.add_cog(Meme(bot))
 bot.add_cog(Languages(bot))
-# bot.add_cog(Translation(bot))
 
 # Read the token and run the bot
 with open('token.txt', 'r') as token_file:
