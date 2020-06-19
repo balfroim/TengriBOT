@@ -1,4 +1,3 @@
-
 from discord.ext import commands
 from LgRoles.Ideol import Ideol
 from Meme.Meme import Meme
