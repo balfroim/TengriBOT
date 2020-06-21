@@ -158,7 +158,7 @@ class Assignations(commands.Cog):
     async def langs(self, context):
         """Afficher la liste des langages du serveur."""
         languages = get_langs(context.message.guild)
-        await context.channel.send(LANG_LIST.format(nb_lang=len(languages), langs=languages))
+        await context.channel.send(LANG_LIST.format(nb_lang=len(languages), langs=enum(languages)))
 
     @commands.command(pass_context=True)
     async def ideols(self, context):
