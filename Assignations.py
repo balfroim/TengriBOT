@@ -15,6 +15,10 @@ def get_role_know(server, lang):
     return discord.utils.get(server.roles, name=f'Connait {lang}')
 
 
+def ref_suggestion(server):
+    return discord.utils.get(server.text_channels, name=f'suggestions🔧').mention
+
+
 def enum(people):
     return f"`{'`, `'.join(people[:-1])}` et `{people[-1]}`"
 
@@ -45,7 +49,7 @@ class Assignations(commands.Cog):
             server = context.message.guild
             lang = normalize(args[0])
             if lang not in get_langs(server):
-                await context.channel.send(LANG_UNKNOWN.format(lang=lang))
+                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
             else:
                 await context.message.author.remove_roles(get_role_know(server, lang))
                 await context.message.author.add_roles(get_role_learn(server, lang))
@@ -60,7 +64,8 @@ class Assignations(commands.Cog):
             server = context.message.guild
             lang = normalize(args[0])
             if lang not in get_langs(server):
-                await context.channel.send(LANG_UNKNOWN.format(lang=lang))
+
+                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
             else:
                 await context.message.author.remove_roles(get_role_learn(server, lang))
                 await context.message.author.add_roles(get_role_know(server, lang))
@@ -75,7 +80,7 @@ class Assignations(commands.Cog):
             server = context.message.guild
             lang = normalize(args[0])
             if lang not in get_langs(server):
-                await context.channel.send(LANG_UNKNOWN.format(lang=lang))
+                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
             else:
                 await context.message.author.remove_roles(get_role_know(server, lang), get_role_learn(server, lang))
                 await context.channel.send(ROLES_CHANGE.format(role_verb=VERB_FORGET, role=LANG.format(lang=lang)))
@@ -108,7 +113,7 @@ class Assignations(commands.Cog):
             server = context.message.guild
             lang = normalize(args[0])
             if lang not in get_langs(server):
-                await context.channel.send(LANG_UNKNOWN.format(lang=lang))
+                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
             else:
                 await get_role_know(server, lang).delete()
                 await get_role_learn(server, lang).delete()
@@ -124,7 +129,7 @@ class Assignations(commands.Cog):
             lang = normalize(args[0])
             speakers = sorted([user.name for user in server.members if (get_role_know(server, lang) in user.roles)])
             if lang not in get_langs(server):
-                await context.channel.send(LANG_UNKNOWN.format(lang=lang))
+                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
             elif len(speakers) == 0:
                 await context.channel.send(ROLES_NOBODY.format(role_verb=VERB_KNOW, role=LANG.format(lang=lang)))
             elif len(speakers) == 1:
@@ -144,7 +149,7 @@ class Assignations(commands.Cog):
             lang = normalize(args[0])
             speakers = sorted([user.name for user in server.members if (get_role_learn(server, lang) in user.roles)])
             if lang not in get_langs(server):
-                await context.channel.send(LANG_UNKNOWN.format(lang=lang))
+                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
             elif len(speakers) == 0:
                 await context.channel.send(ROLES_NOBODY.format(role_verb=VERB_LEARN, role=LANG.format(lang=lang)))
             elif len(speakers) == 1:

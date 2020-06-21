@@ -17,7 +17,8 @@ ROLES_MANY = '{nb} personnes {role_verb[3PP]} {role} : {persons}'
 IDEOL_ADD = 'Tu es maintenant idéolinguiste.'
 IDEOL_RMV = 'Tu n\'es plus idéolinguiste.'
 
-LANG_UNKNOWN = 'La langue **{lang}** est inconnue.'
+LANG_UNKNOWN = 'La langue **{lang}** est inconnue. ' \
+               'Tu peux suggérer d\'ajouter cette langue dans le channel {channel}.'
 LANG_EXISTS = 'La langue **{lang}** est déjà connue.'
 LANG_NEW = 'La langue **{lang}** vient d\'être ajouter !'
 LANG_RMV = 'La langue **{lang}** vient d\'être supprimer !'
