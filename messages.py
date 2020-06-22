@@ -20,8 +20,8 @@ IDEOL_RMV = 'Tu n\'es plus idéolinguiste.'
 LANG_UNKNOWN = 'La langue **{lang}** est inconnue. ' \
                'Tu peux suggérer d\'ajouter cette langue dans le channel {channel}.'
 LANG_EXISTS = 'La langue **{lang}** est déjà connue.'
-LANG_NEW = 'La langue **{lang}** vient d\'être ajouter !'
-LANG_RMV = 'La langue **{lang}** vient d\'être supprimer !'
+LANG_NEW = 'La langue **{lang}** vient d\'être ajoutée !'
+LANG_RMV = 'La langue **{lang}** vient d\'être supprimée !'
 LANG_MISSING = 'Il manque le nom de la langue.'
 LANG_LIST = 'Le serveur gère les {nb_lang} langue(s) suivantes : {langs}'
 
