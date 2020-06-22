@@ -56,7 +56,7 @@ class Assignations(commands.Cog):
                 await context.channel.send(ROLES_CHANGE.format(role_verb=VERB_LEARN, role=LANG.format(lang=lang)))
 
     @commands.command(pass_context=True)
-    async def iknow(self, context, *args):
+    async def ispeak(self, context, *args):
         """Assigner le rôle "Connait" pour une langue."""
         if len(args) < 1:
             await context.channel.send(LANG_MISSING)
@@ -133,7 +133,7 @@ class Assignations(commands.Cog):
             elif len(speakers) == 0:
                 await context.channel.send(ROLES_NOBODY.format(role_verb=VERB_KNOW, role=LANG.format(lang=lang)))
             elif len(speakers) == 1:
-                await context.channel.send(ROLES_ONE.format(role_verb=VERB_KNOW, speaker=speakers[0],
+                await context.channel.send(ROLES_ONE.format(role_verb=VERB_KNOW, person=speakers[0],
                                                             role=LANG.format(lang=lang)))
             else:
                 await context.channel.send(ROLES_MANY.format(role_verb=VERB_KNOW, persons=enum(speakers),
