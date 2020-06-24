@@ -34,6 +34,20 @@ def is_moderator(context):
     return not modo_roles.isdisjoint({role.name for role in context.message.author.roles})
 
 
+async def change_role(context, langs, verb, rmv_role_fcts, add_role_fcts):
+    if len(langs) < 1:
+        await context.channel.send(LANG_MISSING)
+    else:
+        server = context.message.guild
+        for lang in langs:
+            if lang not in get_langs(server):
+                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
+            else:
+                await context.message.author.remove_roles(*[rmv_role(server, lang) for rmv_role in rmv_role_fcts])
+                await context.message.author.add_roles(*[add_role(server, lang) for add_role in add_role_fcts])
+                await context.channel.send(ROLES_CHANGE.format(role_verb=verb, role=LANG.format(lang=lang)))
+
+
 class Assignations(commands.Cog):
     """Commandes d'assignations"""
 
@@ -43,47 +57,20 @@ class Assignations(commands.Cog):
     @commands.command(pass_context=True)
     async def ilearn(self, context, *args):
         """Assigner le rôle "Apprends" pour une langue."""
-        if len(args) < 1:
-            await context.channel.send(LANG_MISSING)
-        else:
-            server = context.message.guild
-            lang = normalize(args[0])
-            if lang not in get_langs(server):
-                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
-            else:
-                await context.message.author.remove_roles(get_role_know(server, lang))
-                await context.message.author.add_roles(get_role_learn(server, lang))
-                await context.channel.send(ROLES_CHANGE.format(role_verb=VERB_LEARN, role=LANG.format(lang=lang)))
+        langs = [normalize(lang) for lang in args]
+        await change_role(context, langs, VERB_LEARN, [get_role_know], [get_role_learn])
 
     @commands.command(pass_context=True)
     async def ispeak(self, context, *args):
         """Assigner le rôle "Connait" pour une langue."""
-        if len(args) < 1:
-            await context.channel.send(LANG_MISSING)
-        else:
-            server = context.message.guild
-            lang = normalize(args[0])
-            if lang not in get_langs(server):
-
-                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
-            else:
-                await context.message.author.remove_roles(get_role_learn(server, lang))
-                await context.message.author.add_roles(get_role_know(server, lang))
-                await context.channel.send(ROLES_CHANGE.format(role_verb=VERB_KNOW, role=LANG.format(lang=lang)))
+        langs = [normalize(lang) for lang in args]
+        await change_role(context, langs, VERB_KNOW, [get_role_learn], [get_role_know])
 
     @commands.command(pass_context=True)
     async def forget(self, context, *args):
         """Oublier une certaine langue."""
-        if len(args) < 1:
-            await context.channel.send(LANG_MISSING)
-        else:
-            server = context.message.guild
-            lang = normalize(args[0])
-            if lang not in get_langs(server):
-                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
-            else:
-                await context.message.author.remove_roles(get_role_know(server, lang), get_role_learn(server, lang))
-                await context.channel.send(ROLES_CHANGE.format(role_verb=VERB_FORGET, role=LANG.format(lang=lang)))
+        langs = [normalize(lang) for lang in args]
+        await change_role(context, langs, VERB_FORGET, [get_role_learn, get_role_know], [])
 
     @commands.command(pass_context=True)
     async def newlang(self, context, *args):
