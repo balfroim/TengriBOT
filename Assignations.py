@@ -28,10 +28,11 @@ def normalize(word):
     return word[0].upper() + word[1:].lower()
 
 
-def is_moderator(context):
-    """Check the author is a moderator."""
-    modo_roles = {"igidarúren «prophètes»", "díngen «divinités»", "Admin"}
-    return not modo_roles.isdisjoint({role.name for role in context.message.author.roles})
+def can_manage_roles(context):
+    """Check if the author can manage roles."""
+    channel = context.channel
+    member = context.message.author
+    return dict(channel.permissions_for(member))['manage_roles']
 
 
 async def change_role(context, langs, verb, rmv_role_fcts, add_role_fcts):
@@ -75,7 +76,7 @@ class Assignations(commands.Cog):
     @commands.command(pass_context=True)
     async def newlang(self, context, *args):
         """[MOD ONLY] Ajouter une langue."""
-        if not is_moderator(context):
+        if not can_manage_roles(context):
             await context.channel.send(MODO_FORBIDDEN)
         elif len(args) < 1:
             await context.channel.send(LANG_MISSING)
@@ -92,7 +93,7 @@ class Assignations(commands.Cog):
     @commands.command(pass_context=True)
     async def rmvlang(self, context, *args):
         """[MOD ONLY] Supprimer une langue."""
-        if not is_moderator(context):
+        if not can_manage_roles(context):
             await context.channel.send(MODO_FORBIDDEN)
         elif len(args) < 1:
             await context.channel.send(LANG_MISSING)
