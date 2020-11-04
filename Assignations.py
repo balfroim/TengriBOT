@@ -115,7 +115,8 @@ class Assignations(commands.Cog):
         else:
             server = context.message.guild
             lang = normalize(args[0])
-            speakers = sorted([user.name for user in server.members if (get_role_know(server, lang) in user.roles)])
+            members = server.fetch_members()
+            speakers = sorted([user.name async for user in members if (get_role_know(server, lang) in user.roles)])
             if lang not in get_langs(server):
                 await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
             elif len(speakers) == 0:
@@ -135,17 +136,18 @@ class Assignations(commands.Cog):
         else:
             server = context.message.guild
             lang = normalize(args[0])
-            speakers = sorted([user.name for user in server.members if (get_role_learn(server, lang) in user.roles)])
+            members = server.fetch_members()
+            learners = sorted([user.name async for user in members if (get_role_learn(server, lang) in user.roles)])
             if lang not in get_langs(server):
                 await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
-            elif len(speakers) == 0:
+            elif len(learners) == 0:
                 await context.channel.send(ROLES_NOBODY.format(role_verb=VERB_LEARN, role=LANG.format(lang=lang)))
-            elif len(speakers) == 1:
-                await context.channel.send(ROLES_ONE.format(role_verb=VERB_LEARN, person=speakers[0],
+            elif len(learners) == 1:
+                await context.channel.send(ROLES_ONE.format(role_verb=VERB_LEARN, person=learners[0],
                                                             role=LANG.format(lang=lang)))
             else:
-                await context.channel.send(ROLES_MANY.format(role_verb=VERB_LEARN, persons=enum(speakers),
-                                                             role=LANG.format(lang=lang), nb=len(speakers)))
+                await context.channel.send(ROLES_MANY.format(role_verb=VERB_LEARN, persons=enum(learners),
+                                                             role=LANG.format(lang=lang), nb=len(learners)))
 
     @commands.command(pass_context=True)
     async def langs(self, context):
