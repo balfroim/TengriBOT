@@ -4,3 +4,4 @@ meme.db
 *.pyc
 Translation/yandex.txt
 venv/
+poetry.lock

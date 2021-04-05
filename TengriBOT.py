@@ -1,11 +1,16 @@
+from discord import Intents
 from discord.ext import commands
+
 from Assignations import Assignations
 
 # Notes: Ignore this module for now
 # from Translation.Translation import Translation
 
+intents = Intents.default()
+intents.members = True
+
 # Init the bot
-bot = commands.Bot(command_prefix='$', description='Bot pour le Discord Linguisticae.')
+bot = commands.Bot(command_prefix='$', description='Bot pour le Discord Linguisticae.', intents=intents)
 
 
 @bot.event

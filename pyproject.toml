@@ -6,7 +6,7 @@ authors = ["Martin <martin.balfroid@student.unamur.be>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-discord = "^1.0.1"
+"discord.py" = "^1.7.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
