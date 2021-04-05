@@ -18,6 +18,14 @@ async def on_ready():
     print('Logged in as %s' % bot.user.name)
 
 
+@bot.event
+async def on_command_error(context, error):
+    if isinstance(error, commands.CommandNotFound):
+        await context.message.channel.send("Désolé, mais je ne connais pas cette commande.")
+    else:
+        raise error
+
+
 # Add all the commands
 bot.add_cog(Assignations(bot))
 
