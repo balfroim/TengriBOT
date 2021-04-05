@@ -1,6 +1,15 @@
+from textwrap import wrap
+
 import discord
 from discord.ext import commands
+
 from messages import *
+
+
+async def send_wrapped_message(channel, message):
+    """Send a message in a channel (wrap it to be less than 2000 characters)."""
+    for part in wrap(message, 2000):
+        await channel.send(part)
 
 
 def get_langs(server):
@@ -125,7 +134,8 @@ class Assignations(commands.Cog):
                 await context.channel.send(ROLES_ONE.format(role_verb=VERB_KNOW, person=speakers[0],
                                                             role=LANG.format(lang=lang)))
             else:
-                await context.channel.send(ROLES_MANY.format(role_verb=VERB_KNOW, persons=enum(speakers),
+                await send_wrapped_message(context.channel,
+                                           ROLES_MANY.format(role_verb=VERB_KNOW, persons=enum(speakers),
                                                              role=LANG.format(lang=lang), nb=len(speakers)))
 
     @commands.command(pass_context=True)
@@ -146,7 +156,8 @@ class Assignations(commands.Cog):
                 await context.channel.send(ROLES_ONE.format(role_verb=VERB_LEARN, person=learners[0],
                                                             role=LANG.format(lang=lang)))
             else:
-                await context.channel.send(ROLES_MANY.format(role_verb=VERB_LEARN, persons=enum(learners),
+                await send_wrapped_message(context.channel,
+                                           ROLES_MANY.format(role_verb=VERB_LEARN, persons=enum(learners),
                                                              role=LANG.format(lang=lang), nb=len(learners)))
 
     @commands.command(pass_context=True)
@@ -166,7 +177,8 @@ class Assignations(commands.Cog):
         elif len(ideols) == 1:
             await context.channel.send(ROLES_ONE.format(role_verb=VERB_BE, person=ideols[0], role=IDEOL))
         else:
-            await context.channel.send(ROLES_MANY.format(role_verb=VERB_BE, persons=enum(ideols),
+            await send_wrapped_message(context.channel,
+                                       ROLES_MANY.format(role_verb=VERB_BE, persons=enum(ideols),
                                                          role=IDEOL, nb=len(ideols)))
 
     @commands.command(pass_context=True)
@@ -184,3 +196,8 @@ class Assignations(commands.Cog):
         role = discord.utils.get(server.roles, name='Idéolinguiste')
         await context.message.author.remove_roles(role)
         await context.channel.send(IDEOL_RMV)
+
+    @commands.command(pass_context=True)
+    async def source(self, context):
+        """Lien github vers le code source."""
+        await context.channel.send("https://github.com/balfroim/TengriBOT")
