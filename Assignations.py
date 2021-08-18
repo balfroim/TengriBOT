@@ -100,7 +100,7 @@ class De_assignations(commands.Cog):
         await change_role(context, langs, VERB_FORGET, [get_role_learn, get_role_know], [])
 
     @commands.command(pass_context=True)
-    async def rmvideol(self, context):
+    async def noideol(self, context):
         """Retirer le rôle idéolinguiste."""
         server = context.message.guild
         role = discord.utils.get(server.roles, name='Idéolinguiste')
@@ -206,7 +206,7 @@ class Moderation(commands.Cog):
                 await context.channel.send(LANG_NEW.format(lang=lang))
 
     @commands.command(pass_context=True)
-    async def rmvlang(self, context, *args):
+    async def rmlang(self, context, *args):
         """[MOD ONLY] Supprimer une langue."""
         if not can_manage_roles(context):
             await context.channel.send(MODO_FORBIDDEN)
