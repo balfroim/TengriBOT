@@ -57,9 +57,10 @@ async def change_role(context, langs, verb, rmv_role_fcts, add_role_fcts):
                 await context.message.author.add_roles(*[add_role(server, lang) for add_role in add_role_fcts])
                 await context.channel.send(ROLES_CHANGE.format(role_verb=verb, role=LANG.format(lang=lang)))
 
+### ASSIGNATIONS
 
 class Assignations(commands.Cog):
-    """Commandes d'assignations"""
+    """Commandes d'assignation"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -77,10 +78,115 @@ class Assignations(commands.Cog):
         await change_role(context, langs, VERB_KNOW, [get_role_learn], [get_role_know])
 
     @commands.command(pass_context=True)
+    async def ideol(self, context):
+        """Assigner le rôle idéolinguiste."""
+        server = context.message.guild
+        role = discord.utils.get(server.roles, name='Idéolinguiste')
+        await context.message.author.add_roles(role)
+        await context.channel.send(IDEOL_ADD)
+        
+### DE-ASSIGNATIONS
+
+class Dé_assignations(commands.Cog):
+    """Commandes de dé-assignation"""
+
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(pass_context=True)
     async def forget(self, context, *args):
         """Oublier une certaine langue."""
         langs = [normalize(lang) for lang in args]
         await change_role(context, langs, VERB_FORGET, [get_role_learn, get_role_know], [])
+
+    @commands.command(pass_context=True)
+    async def rmvideol(self, context):
+        """Retirer le rôle idéolinguiste."""
+        server = context.message.guild
+        role = discord.utils.get(server.roles, name='Idéolinguiste')
+        await context.message.author.remove_roles(role)
+        await context.channel.send(IDEOL_RMV)
+
+### LISTES
+        
+class Listes(commands.Cog):
+    """Commandes pour lister des informations"""
+
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(pass_context=True)
+    async def langs(self, context):
+        """Afficher la liste des langages du serveur."""
+        languages = get_langs(context.message.guild)
+        await context.channel.send(LANG_LIST.format(nb_lang=len(languages), langs=enum(languages)))
+
+    @commands.command(pass_context=True)
+    async def learners(self, context, *args):
+        """Afficher la liste des gens qui apprennent une certaine langue."""
+        if len(args) < 1:
+            await context.channel.send(LANG_MISSING)
+        else:
+            server = context.message.guild
+            lang = normalize(args[0])
+            members = server.fetch_members()
+            learners = sorted([user.name async for user in members if (get_role_learn(server, lang) in user.roles)])
+            if lang not in get_langs(server):
+                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
+            elif len(learners) == 0:
+                await context.channel.send(ROLES_NOBODY.format(role_verb=VERB_LEARN, role=LANG.format(lang=lang)))
+            elif len(learners) == 1:
+                await context.channel.send(ROLES_ONE.format(role_verb=VERB_LEARN, person=learners[0],
+                                                            role=LANG.format(lang=lang)))
+            else:
+                await send_wrapped_message(context.channel,
+                                           ROLES_MANY.format(role_verb=VERB_LEARN, persons=enum(learners),
+                                                             role=LANG.format(lang=lang), nb=len(learners)))
+
+    @commands.command(pass_context=True)
+    async def speakers(self, context, *args):
+        """Afficher la liste des gens qui connaissent une certaine langue."""
+        if len(args) < 1:
+            await context.channel.send(LANG_MISSING)
+        else:
+            server = context.message.guild
+            lang = normalize(args[0])
+            members = server.fetch_members()
+            speakers = sorted([user.name async for user in members if (get_role_know(server, lang) in user.roles)])
+            if lang not in get_langs(server):
+                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
+            elif len(speakers) == 0:
+                await context.channel.send(ROLES_NOBODY.format(role_verb=VERB_KNOW, role=LANG.format(lang=lang)))
+            elif len(speakers) == 1:
+                await context.channel.send(ROLES_ONE.format(role_verb=VERB_KNOW, person=speakers[0],
+                                                            role=LANG.format(lang=lang)))
+            else:
+                await send_wrapped_message(context.channel,
+                                           ROLES_MANY.format(role_verb=VERB_KNOW, persons=enum(speakers),
+                                                             role=LANG.format(lang=lang), nb=len(speakers)))
+
+    @commands.command(pass_context=True)
+    async def ideols(self, context):
+        """Afficher la liste des idéolinguistes du serveur."""
+        server = context.message.guild
+        role = discord.utils.get(server.roles, name='Idéolinguiste')
+        ideols = sorted([user.name for user in server.members if (role in user.roles)])
+        if len(ideols) == 0:
+            await context.channel.send(ROLES_NOBODY.format(role_verb=VERB_BE, role=IDEOL))
+        elif len(ideols) == 1:
+            await context.channel.send(ROLES_ONE.format(role_verb=VERB_BE, person=ideols[0], role=IDEOL))
+        else:
+            await send_wrapped_message(context.channel,
+                                       ROLES_MANY.format(role_verb=VERB_BE, persons=enum(ideols),
+                                                         role=IDEOL, nb=len(ideols)))
+
+### MODERATION
+
+class Modération(commands.Cog):
+    """Commandes de modération des langues"""
+
+    def __init__(self, bot):
+        self.bot = bot
 
     @commands.command(pass_context=True)
     async def newlang(self, context, *args):
@@ -116,86 +222,13 @@ class Assignations(commands.Cog):
                 await get_role_learn(server, lang).delete()
                 await context.channel.send(LANG_RMV.format(lang=lang))
 
-    @commands.command(pass_context=True)
-    async def speakers(self, context, *args):
-        """Afficher la liste des gens qui connaissent une certaine langue."""
-        if len(args) < 1:
-            await context.channel.send(LANG_MISSING)
-        else:
-            server = context.message.guild
-            lang = normalize(args[0])
-            members = server.fetch_members()
-            speakers = sorted([user.name async for user in members if (get_role_know(server, lang) in user.roles)])
-            if lang not in get_langs(server):
-                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
-            elif len(speakers) == 0:
-                await context.channel.send(ROLES_NOBODY.format(role_verb=VERB_KNOW, role=LANG.format(lang=lang)))
-            elif len(speakers) == 1:
-                await context.channel.send(ROLES_ONE.format(role_verb=VERB_KNOW, person=speakers[0],
-                                                            role=LANG.format(lang=lang)))
-            else:
-                await send_wrapped_message(context.channel,
-                                           ROLES_MANY.format(role_verb=VERB_KNOW, persons=enum(speakers),
-                                                             role=LANG.format(lang=lang), nb=len(speakers)))
+### SOURCE
 
-    @commands.command(pass_context=True)
-    async def learners(self, context, *args):
-        """Afficher la liste des gens qui apprennent une certaine langue."""
-        if len(args) < 1:
-            await context.channel.send(LANG_MISSING)
-        else:
-            server = context.message.guild
-            lang = normalize(args[0])
-            members = server.fetch_members()
-            learners = sorted([user.name async for user in members if (get_role_learn(server, lang) in user.roles)])
-            if lang not in get_langs(server):
-                await context.channel.send(LANG_UNKNOWN.format(lang=lang, channel=ref_suggestion(server)))
-            elif len(learners) == 0:
-                await context.channel.send(ROLES_NOBODY.format(role_verb=VERB_LEARN, role=LANG.format(lang=lang)))
-            elif len(learners) == 1:
-                await context.channel.send(ROLES_ONE.format(role_verb=VERB_LEARN, person=learners[0],
-                                                            role=LANG.format(lang=lang)))
-            else:
-                await send_wrapped_message(context.channel,
-                                           ROLES_MANY.format(role_verb=VERB_LEARN, persons=enum(learners),
-                                                             role=LANG.format(lang=lang), nb=len(learners)))
+class Source(commands.Cog):
+    """Lien du code source du bot"""
 
-    @commands.command(pass_context=True)
-    async def langs(self, context):
-        """Afficher la liste des langages du serveur."""
-        languages = get_langs(context.message.guild)
-        await context.channel.send(LANG_LIST.format(nb_lang=len(languages), langs=enum(languages)))
-
-    @commands.command(pass_context=True)
-    async def ideols(self, context):
-        """Afficher la liste des idéolinguistes du serveur."""
-        server = context.message.guild
-        role = discord.utils.get(server.roles, name='Idéolinguiste')
-        ideols = sorted([user.name for user in server.members if (role in user.roles)])
-        if len(ideols) == 0:
-            await context.channel.send(ROLES_NOBODY.format(role_verb=VERB_BE, role=IDEOL))
-        elif len(ideols) == 1:
-            await context.channel.send(ROLES_ONE.format(role_verb=VERB_BE, person=ideols[0], role=IDEOL))
-        else:
-            await send_wrapped_message(context.channel,
-                                       ROLES_MANY.format(role_verb=VERB_BE, persons=enum(ideols),
-                                                         role=IDEOL, nb=len(ideols)))
-
-    @commands.command(pass_context=True)
-    async def ideol(self, context):
-        """Assigner le rôle idéolinguiste."""
-        server = context.message.guild
-        role = discord.utils.get(server.roles, name='Idéolinguiste')
-        await context.message.author.add_roles(role)
-        await context.channel.send(IDEOL_ADD)
-
-    @commands.command(pass_context=True)
-    async def rmvideol(self, context):
-        """Retirer le rôle idéolinguiste."""
-        server = context.message.guild
-        role = discord.utils.get(server.roles, name='Idéolinguiste')
-        await context.message.author.remove_roles(role)
-        await context.channel.send(IDEOL_RMV)
+    def __init__(self, bot):
+        self.bot = bot
 
     @commands.command(pass_context=True)
     async def source(self, context):
