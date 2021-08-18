@@ -1,7 +1,7 @@
 from discord import Intents
 from discord.ext import commands
 
-from Assignations import Assignations
+from Assignations import Assignations, De_assignations, Listes, Moderation, Source
 
 # Notes: Ignore this module for now
 # from Translation.Translation import Translation
@@ -28,6 +28,10 @@ async def on_command_error(context, error):
 
 # Add all the commands
 bot.add_cog(Assignations(bot))
+bot.add_cog(De_assignations(bot))
+bot.add_cog(Listes(bot))
+bot.add_cog(Moderation(bot))
+bot.add_cog(Source(bot))
 
 # Read the token and run the bot
 with open('token.txt', 'r') as token_file:
