@@ -24,6 +24,10 @@ def get_role_know(server, lang):
     return discord.utils.get(server.roles, name=f'Connait {lang}')
 
 
+def get_role_ideol(server, lang):
+    return discord.utils.get(server.roles, name=f'Idéolinguiste')
+
+
 def ref_suggestion(server):
     return discord.utils.get(server.text_channels, name=f'suggestions🔧').mention
 
@@ -57,38 +61,10 @@ async def change_role(context, langs, verb, rmv_role_fcts, add_role_fcts):
                 await context.message.author.add_roles(*[add_role(server, lang) for add_role in add_role_fcts])
                 await context.channel.send(ROLES_CHANGE.format(role_verb=verb, role=LANG.format(lang=lang)))
 
-### ASSIGNATIONS
+### COMMANDES LANGUES
 
-class Assignations(commands.Cog):
-    """Commandes d'assignation"""
-
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.command(pass_context=True)
-    async def ilearn(self, context, *args):
-        """Assigner le rôle "Apprends" pour une langue."""
-        langs = [normalize(lang) for lang in args]
-        await change_role(context, langs, VERB_LEARN, [get_role_know], [get_role_learn])
-
-    @commands.command(pass_context=True)
-    async def ispeak(self, context, *args):
-        """Assigner le rôle "Connait" pour une langue."""
-        langs = [normalize(lang) for lang in args]
-        await change_role(context, langs, VERB_KNOW, [get_role_learn], [get_role_know])
-
-    @commands.command(pass_context=True)
-    async def ideol(self, context):
-        """Assigner le rôle idéolinguiste."""
-        server = context.message.guild
-        role = discord.utils.get(server.roles, name='Idéolinguiste')
-        await context.message.author.add_roles(role)
-        await context.channel.send(IDEOL_ADD)
-        
-### DE-ASSIGNATIONS
-
-class De_assignations(commands.Cog):
-    """Commandes de dé-assignation"""
+class Langues(commands.Cog):
+    """Commandes concernant les langues"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -100,26 +76,16 @@ class De_assignations(commands.Cog):
         await change_role(context, langs, VERB_FORGET, [get_role_learn, get_role_know], [])
 
     @commands.command(pass_context=True)
-    async def noideol(self, context):
-        """Retirer le rôle idéolinguiste."""
-        server = context.message.guild
-        role = discord.utils.get(server.roles, name='Idéolinguiste')
-        await context.message.author.remove_roles(role)
-        await context.channel.send(IDEOL_RMV)
-
-### LISTES
-        
-class Listes(commands.Cog):
-    """Commandes pour lister des informations"""
-
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.command(pass_context=True)
     async def langs(self, context):
         """Afficher la liste des langages du serveur."""
         languages = get_langs(context.message.guild)
         await context.channel.send(LANG_LIST.format(nb_lang=len(languages), langs=enum(languages)))
+
+    @commands.command(pass_context=True)
+    async def learn(self, context, *args):
+        """Assigner le rôle "Apprends" pour une langue."""
+        langs = [normalize(lang) for lang in args]
+        await change_role(context, langs, VERB_LEARN, [get_role_know], [get_role_learn])
 
     @commands.command(pass_context=True)
     async def learners(self, context, *args):
@@ -144,6 +110,12 @@ class Listes(commands.Cog):
                                                              role=LANG.format(lang=lang), nb=len(learners)))
 
     @commands.command(pass_context=True)
+    async def speak(self, context, *args):
+        """Assigner le rôle "Connait" pour une langue."""
+        langs = [normalize(lang) for lang in args]
+        await change_role(context, langs, VERB_KNOW, [get_role_learn], [get_role_know])
+
+    @commands.command(pass_context=True)
     async def speakers(self, context, *args):
         """Afficher la liste des gens qui connaissent une certaine langue."""
         if len(args) < 1:
@@ -165,22 +137,48 @@ class Listes(commands.Cog):
                                            ROLES_MANY.format(role_verb=VERB_KNOW, persons=enum(speakers),
                                                              role=LANG.format(lang=lang), nb=len(speakers)))
 
+### COMMANDES IDEOLANGUES
+
+class Ideolangues(commands.Cog):
+    """Commandes concernant les idéolangues"""
+
+    def __init__(self, bot):
+        self.bot = bot
+
     @commands.command(pass_context=True)
-    async def ideols(self, context):
-        """Afficher la liste des idéolinguistes du serveur."""
+    async def ideol(self, context):
+        """Assigner le rôle idéolinguiste."""
         server = context.message.guild
         role = discord.utils.get(server.roles, name='Idéolinguiste')
-        ideols = sorted([user.name for user in server.members if (role in user.roles)])
+        await context.message.author.add_roles(role)
+        await context.channel.send(IDEOL_ADD)
+     
+    @commands.command(pass_context=True)
+    async def noideol(self, context):
+        """Retirer le rôle idéolinguiste."""
+        server = context.message.guild
+        role = discord.utils.get(server.roles, name='Idéolinguiste')
+        await context.message.author.remove_roles(role)
+        await context.channel.send(IDEOL_RMV)
+
+    @commands.command(pass_context=True)
+    async def ideols(self, context, *args):
+        """Afficher la liste des idéolinguistes"""
+        server = context.message.guild
+        lang = normalize(args[0])
+        members = server.fetch_members()
+        ideols = sorted([user.name async for user in members if (get_role_ideol(server, lang) in user.roles)])
         if len(ideols) == 0:
             await context.channel.send(ROLES_NOBODY.format(role_verb=VERB_BE, role=IDEOL))
         elif len(ideols) == 1:
-            await context.channel.send(ROLES_ONE.format(role_verb=VERB_BE, person=ideols[0], role=IDEOL))
+            await context.channel.send(ROLES_ONE.format(role_verb=VERB_BE, person=ideols[0],
+                                                        role=IDEOL))
         else:
             await send_wrapped_message(context.channel,
                                        ROLES_MANY.format(role_verb=VERB_BE, persons=enum(ideols),
                                                          role=IDEOL, nb=len(ideols)))
 
-### MODERATION
+### COMMANDES MODERATION
 
 class Moderation(commands.Cog):
     """Commandes de modération des langues"""
@@ -222,10 +220,10 @@ class Moderation(commands.Cog):
                 await get_role_learn(server, lang).delete()
                 await context.channel.send(LANG_RMV.format(lang=lang))
 
-### SOURCE
+### COMMANDES DIVERSES
 
-class Source(commands.Cog):
-    """Lien du code source du bot"""
+class Divers(commands.Cog):
+    """Commandes diverses"""
 
     def __init__(self, bot):
         self.bot = bot
