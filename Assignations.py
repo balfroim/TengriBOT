@@ -87,7 +87,7 @@ class Assignations(commands.Cog):
         
 ### DE-ASSIGNATIONS
 
-class Dé_assignations(commands.Cog):
+class De_assignations(commands.Cog):
     """Commandes de dé-assignation"""
 
     def __init__(self, bot):
