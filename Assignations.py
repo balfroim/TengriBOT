@@ -182,7 +182,7 @@ class Listes(commands.Cog):
 
 ### MODERATION
 
-class Modération(commands.Cog):
+class Moderation(commands.Cog):
     """Commandes de modération des langues"""
 
     def __init__(self, bot):
